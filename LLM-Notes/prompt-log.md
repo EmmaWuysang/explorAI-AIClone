@@ -1,0 +1,85 @@
+# Prompt Log
+
+This file automatically logs all prompts sent to the AI Editor.
+
+---
+
+## 2025-01-27
+
+### Prompt Entry #1
+
+**Timestamp:** 2025-01-27T00:00:00Z
+
+I want you to create a running MD file that adds every prompt that I Send to the AI Editor. Create a cursor rules file in root that also includes a rule that requires the LLM to print all of my sent prompts into the file first and foremost.
+
+Then create a folder named LLM-Notes for the LLM to store all MD files in, and proceed to also include a cursor rule that dictates all MD notes made by the LLM should be stored there.
+
+---
+
+### Prompt Entry #2
+
+**Timestamp:** 2025-11-17T22:28:25Z
+
+I want to create a scalable and dynamic AI powered chatbot application that will have access to external APIs and tools offered by other online services such as google mail, google calendar, etc. I want you to create a thorough notetaking framework for any LLM instance to be able to make and update notes and goals in real time. This system should also have an organized current tasklist, considerations, and dynamicall be able to archive notes when irrelevant or completed.
+
+Add efficient and concise cursor notes to require future LLMs that work on this project to have to also adhere to this system
+
+---
+
+### Prompt Entry #3
+
+**Timestamp:** 2025-11-17T22:32:01Z
+
+Instead of having independent markdown files for each segment, make subfolders so that LLMs wasting unecessary tokens editing each markdown file but instead dump into the appropriate archived files. LLMs should still be able to make small edits to existing MD files but should take agency in reorganizing or archiving context that is not needed anymore. This file system should operate as a dynamic context window for any LLM to be able to clearly pick up progress and continue with development.
+
+Don't forget to update the cursor rules to outline this new protocol.
+
+---
+
+### Prompt Entry #4
+
+**Timestamp:** 2025-11-17T22:36:25Z
+
+Let me re-clarify, there should be an archive folder for entire files to be dumped into with this new pipeline. I want to streamline token usage such that LLMs should not unecessarily have to read and edit files between current implementations and archived notes. When creating note files, its okay to create multiple current independent files in a directory, as the LLM should do its due dilligence in cleaning up irrelevant and no longer necessary files in the appropriate archives. remember to update cursor rules with new specs
+
+---
+
+### Prompt Entry #5
+
+**Timestamp:** 2025-11-17T22:39:09Z
+
+eradicate all the archived-x md files, we are proceeding to the global archived MD system
+
+---
+
+### Prompt Entry #6
+
+**Timestamp:** 2025-11-17T22:42:30Z
+
+lets now begin creating a game plan for our project. I want to use Next.js and tailwindcss for this project and want to keep open considerations for what optimal backend stacks will look like. Lets also start add cursor rules to prioritize avoiding hardcoded solutions and shortcuts to meet specifications. The LLM should be honest and able to halt work when implementations do not work and are looping failures and notify the user.
+
+---
+
+### Prompt Entry #7
+
+**Timestamp:** 2025-11-17T22:44:00Z
+
+Additionally add cursor rules that dictate LLMs prioritize solutions that are modular and scalable, even though they make take more time and effort to implement.
+
+---
+
+### Prompt Entry #8
+
+**Timestamp:** 2025-11-17T22:52:43Z
+
+I want to set up my service using node.js for lower latency and scaling purposes. Create a webpage with a simple chatbox component and create a .env file for me to be able to inject an API key. Ensure that you also create a gitignore and add this env file as well as node modules after installing my stack
+
+---
+
+### Prompt Entry #9
+
+**Timestamp:** 2025-11-17T22:54:52Z
+
+check downloaded modules, ensure we update, remove, or find replacements for any deprecated packages.
+
+---
