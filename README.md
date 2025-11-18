@@ -21,11 +21,13 @@
      ```bash
      cp .env.example .env
      ```
-   - Add your OpenAI API key to `.env`:
-     ```
-     OPENAI_API_KEY=your_api_key_here
-     ```
-   - Get your API key from [OpenAI Platform](https://platform.openai.com/api-keys)
+- Add your OpenAI API key to `.env`:
+
+```bash
+OPENAI_API_KEY=your_api_key_here
+```
+
+- Get your API key from [OpenAI Platform](https://platform.openai.com/api-keys)
 
 3. **Run the development server:**
    ```bash
@@ -50,13 +52,21 @@
 explorAI-AIClone/
 ├── app/                    # Next.js App Router
 │   ├── api/              # API routes
-│   │   └── chat/         # Chat API endpoint
+│   │   ├── chat/         # Chat API endpoint (OpenAI streaming)
+│   │   └── personas/     # Persona CRUD endpoints
+│   ├── personas/         # Persona management page
 │   ├── globals.css       # Global styles
 │   ├── layout.tsx        # Root layout
-│   └── page.tsx          # Home page
+│   └── page.tsx          # Home page (Chat interface)
 ├── components/           # React components
-│   └── Chatbox.tsx       # Chat interface component
+│   ├── Chatbox.tsx       # Chat interface with streaming
+│   ├── Navigation.tsx    # Navigation component
+│   └── PersonaEditor.tsx # Persona editor component
 ├── lib/                  # Utility functions
+│   ├── ai-client.ts      # OpenAI API client
+│   └── persona-manager.ts # Persona file management
+├── personas/             # Persona JSON files
+│   └── default.json      # Default persona
 ├── LLM-Notes/           # LLM notetaking framework
 └── public/              # Static assets
 ```
@@ -65,19 +75,20 @@ explorAI-AIClone/
 
 ## 🛠️ Technology Stack
 
-- **Framework:** Next.js 14 (App Router)
+- **Framework:** Next.js 15 (App Router)
 - **Language:** TypeScript
-- **Styling:** Tailwind CSS
+- **Styling:** Tailwind CSS v4
+- **AI Provider:** OpenAI (gpt-4o-mini)
 - **Runtime:** Node.js
 
 ---
 
 ## 🔐 Environment Variables
 
-Create a `.env` file in the root directory with the following variables:
+Create a `.env` file in the root directory with the following variable:
 
 ```env
-OPENAI_API_KEY=your_api_key_here
+
 ```
 
 **Note:** The `.env` file is already included in `.gitignore` and will not be committed to version control.
@@ -92,13 +103,7 @@ OPENAI_API_KEY=your_api_key_here
 
 ---
 
-## 🎯 Project Goals
 
-Create a scalable and dynamic AI-powered chatbot application with:
-- Access to external APIs (Google Mail, Google Calendar, etc.)
-- Real-time note and goal management
-- Task list organization
-- Dynamic archiving system
 
 ---
 
@@ -107,4 +112,4 @@ Create a scalable and dynamic AI-powered chatbot application with:
 - [Next.js Documentation](https://nextjs.org/docs)
 - [Tailwind CSS Documentation](https://tailwindcss.com/docs)
 - [TypeScript Documentation](https://www.typescriptlang.org/docs/)
-- [OpenAI API Documentation](https://platform.openai.com/docs)
+- [Google Gemini API Documentation](https://ai.google.dev/docs)

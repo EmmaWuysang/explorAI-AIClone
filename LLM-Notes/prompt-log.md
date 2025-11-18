@@ -83,3 +83,27 @@ I want to set up my service using node.js for lower latency and scaling purposes
 check downloaded modules, ensure we update, remove, or find replacements for any deprecated packages.
 
 ---
+
+### Prompt Entry #10
+
+**Timestamp:** 2025-11-18T01:14:22Z
+
+do a full reinstall on the project dependencies, ensure all tailwind and next.js packages are properly configured and are up to date
+
+---
+
+### Prompt Entry #11
+
+**Timestamp:** 2025-11-18T01:23:02Z
+
+Lets start fleshing out the basic features of the project scope. Ensure endpoints of the AI are properly hooked for real time conversation. Model the current user experience of having in progress animated text bubbles when the AI is generating a response. Also have editable JSON backend prompting for specific AI personas
+
+---
+
+### Prompt Entry #12
+
+**Timestamp:** 2025-11-18T01:27:52Z
+
+Enable toggling of the various frontier AI APIs availble as of MON NOV 17 2025. Fetch online information and allow the user to hot swap between models and have particular segments in the .env files
+
+---

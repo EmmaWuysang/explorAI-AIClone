@@ -1,28 +1,513 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+/* JARVIS Design System - Iron Man / Tony Stark Inspired */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap');
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+  /* Arc Reactor Blue & Gold Palette */
+  --color-bg-primary: 10, 15, 20;
+  --color-bg-secondary: 15, 20, 28;
+  --color-bg-tertiary: 20, 28, 38;
+  --color-bg-elevated: 18, 24, 32;
+
+  /* Arc Reactor Blue (Cyan) */
+  --color-arc-reactor: 0, 243, 255;
+  --color-arc-glow: 0, 174, 239;
+  --color-arc-dark: 0, 136, 204;
+
+  /* Stark Gold */
+  --color-stark-gold: 255, 193, 7;
+  --color-stark-gold-light: 255, 215, 64;
+  --color-stark-gold-dark: 255, 160, 0;
+
+  /* HUD Colors */
+  --color-text-primary: 0, 243, 255;
+  --color-text-secondary: 100, 200, 255;
+  --color-text-tertiary: 80, 150, 200;
+  --color-text-muted: 60, 100, 130;
+
+  --color-accent: 0, 243, 255;
+  --color-accent-hover: 0, 200, 255;
+  --color-accent-light: 0, 174, 239;
+
+  --color-border: 0, 243, 255;
+  --color-border-glow: 0, 174, 239;
+
+  --color-success: 76, 175, 80;
+  --color-error: 244, 67, 54;
+  --color-warning: 255, 193, 7;
+
+  /* Holographic Effects */
+  --holo-blue: 0, 243, 255;
+  --holo-cyan: 0, 229, 255;
+  --holo-teal: 0, 188, 212;
+
+  /* Shadows & Glows */
+  --shadow-arc: 0 0 20px rgba(0, 243, 255, 0.5);
+  --shadow-gold: 0 0 30px rgba(255, 193, 7, 0.4);
+  --glow-intense: 0 0 40px rgba(0, 243, 255, 0.8);
+  --glow-soft: 0 0 15px rgba(0, 243, 255, 0.3);
+
+  /* Animations */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-hud: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
+/* Base Styles */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  margin: 0;
+  padding: 0;
+  font-family: 'Rajdhani', 'Orbitron', -apple-system, BlinkMacSystemFont, 'Segoe UI', monospace;
+  color: rgb(var(--color-text-primary));
+  background: rgb(var(--color-bg-primary));
+  line-height: 1.6;
+  overflow-x: hidden;
+  letter-spacing: 0.5px;
 }
 
+/* Arc Reactor Animated Background */
+body::before {
+  content: '';
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 800px;
+  height: 800px;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    circle at center,
+    rgba(0, 243, 255, 0.05) 0%,
+    rgba(0, 174, 239, 0.02) 30%,
+    transparent 70%
+  );
+  animation: arcPulse 4s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background:
+    linear-gradient(0deg, transparent 98%, rgba(0, 243, 255, 0.03) 100%),
+    linear-gradient(90deg, transparent 98%, rgba(0, 243, 255, 0.03) 100%);
+  background-size: 50px 50px, 50px 50px;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.3;
+}
+
+@keyframes arcPulse {
+  0%, 100% {
+    opacity: 0.3;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+}
+
+/* Scan Lines Effect */
+@keyframes scanline {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100vh);
+  }
+}
+
+.scanlines {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+  overflow: hidden;
+}
+
+.scanlines::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(0, 243, 255, 0.05),
+    transparent
+  );
+  animation: scanline 8s linear infinite;
+}
+
+/* Selection */
+::selection {
+  background: rgba(var(--color-arc-reactor), 0.3);
+  color: rgb(var(--color-text-primary));
+  text-shadow: 0 0 8px rgba(var(--color-arc-reactor), 0.8);
+}
+
+::-moz-selection {
+  background: rgba(var(--color-arc-reactor), 0.3);
+  color: rgb(var(--color-text-primary));
+}
+
+/* Scrollbar Styling - JARVIS Style */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgb(var(--color-bg-secondary));
+  border-left: 1px solid rgba(var(--color-arc-reactor), 0.2);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(var(--color-arc-reactor), 0.4);
+  border-radius: 2px;
+  border-left: 2px solid rgb(var(--color-arc-reactor));
+  box-shadow: inset 0 0 6px rgba(var(--color-arc-reactor), 0.5);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(var(--color-arc-reactor), 0.6);
+  box-shadow: 0 0 8px rgba(var(--color-arc-reactor), 0.8);
+}
+
+/* Focus Styles */
+:focus-visible {
+  outline: 2px solid rgb(var(--color-arc-reactor));
+  outline-offset: 2px;
+  box-shadow: 0 0 12px rgba(var(--color-arc-reactor), 0.6);
+}
+
+/* Smooth Transitions */
+a, button, input, textarea {
+  transition: all var(--transition-base);
+}
+
+/* Code Blocks - Monospaced HUD Style */
+pre, code {
+  font-family: 'Share Tech Mono', 'Courier New', monospace;
+  letter-spacing: 1px;
+}
+
+code {
+  background: rgba(var(--color-bg-tertiary), 0.6);
+  padding: 0.2rem 0.5rem;
+  border-radius: 2px;
+  border: 1px solid rgba(var(--color-arc-reactor), 0.3);
+  color: rgb(var(--color-arc-reactor));
+  font-size: 0.9em;
+  box-shadow: inset 0 0 10px rgba(var(--color-arc-reactor), 0.1);
+}
+
+pre code {
+  background: transparent;
+  padding: 0;
+}
+
+/* HUD Panel Style */
+.hud-panel {
+  background: rgba(var(--color-bg-elevated), 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(var(--color-arc-reactor), 0.4);
+  box-shadow:
+    0 0 20px rgba(var(--color-arc-reactor), 0.2),
+    inset 0 0 30px rgba(var(--color-arc-reactor), 0.05);
+  position: relative;
+}
+
+.hud-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(var(--color-arc-reactor)),
+    transparent
+  );
+  opacity: 0.6;
+}
+
+/* Arc Reactor Glow Effect */
+.arc-glow {
+  box-shadow:
+    0 0 10px rgba(var(--color-arc-reactor), 0.4),
+    0 0 20px rgba(var(--color-arc-reactor), 0.3),
+    0 0 30px rgba(var(--color-arc-reactor), 0.2);
+  animation: arcGlowPulse 2s ease-in-out infinite;
+}
+
+@keyframes arcGlowPulse {
+  0%, 100% {
+    box-shadow:
+      0 0 10px rgba(var(--color-arc-reactor), 0.4),
+      0 0 20px rgba(var(--color-arc-reactor), 0.3),
+      0 0 30px rgba(var(--color-arc-reactor), 0.2);
+  }
+  50% {
+    box-shadow:
+      0 0 15px rgba(var(--color-arc-reactor), 0.6),
+      0 0 30px rgba(var(--color-arc-reactor), 0.4),
+      0 0 45px rgba(var(--color-arc-reactor), 0.3);
+  }
+}
+
+/* Text Gradient - Arc Reactor Style */
+.text-arc-gradient {
+  background: linear-gradient(
+    135deg,
+    rgb(var(--color-arc-reactor)),
+    rgb(var(--color-stark-gold))
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 8px rgba(var(--color-arc-reactor), 0.5));
+}
+
+.text-gradient {
+  background: linear-gradient(
+    135deg,
+    rgb(var(--color-arc-reactor)),
+    rgb(var(--color-stark-gold))
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Holographic Shimmer */
+.holo-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.holo-shimmer::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(var(--color-arc-reactor), 0.15),
+    transparent
+  );
+  transform: rotate(45deg);
+  animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: rotate(45deg) translateX(-100%);
+  }
+  100% {
+    transform: rotate(45deg) translateX(100%);
+  }
+}
+
+/* Loading States - HUD Style */
+.hud-loading {
+  position: relative;
+  background: linear-gradient(
+    90deg,
+    rgba(var(--color-bg-tertiary), 0.5) 0%,
+    rgba(var(--color-arc-reactor), 0.1) 50%,
+    rgba(var(--color-bg-tertiary), 0.5) 100%
+  );
+  background-size: 200% 100%;
+  animation: hudLoading 1.5s ease-in-out infinite;
+  border: 1px solid rgba(var(--color-arc-reactor), 0.3);
+}
+
+@keyframes hudLoading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Holographic Border Animation */
+.holo-border {
+  position: relative;
+  border: 1px solid rgba(var(--color-arc-reactor), 0.4);
+}
+
+.holo-border::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  right: -1px;
+  bottom: -1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(var(--color-arc-reactor), 0.6),
+    transparent
+  );
+  border-radius: inherit;
+  animation: borderGlow 2s linear infinite;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+@keyframes borderGlow {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Stark Gold Accent */
+.gold-accent {
+  color: rgb(var(--color-stark-gold));
+  text-shadow: 0 0 8px rgba(var(--color-stark-gold), 0.6);
+}
+
+/* Arc Reactor Button */
+.arc-button {
+  background: linear-gradient(
+    135deg,
+    rgba(var(--color-arc-reactor), 0.2),
+    rgba(var(--color-arc-reactor), 0.1)
+  );
+  border: 1px solid rgb(var(--color-arc-reactor));
+  color: rgb(var(--color-arc-reactor));
+  box-shadow:
+    0 0 10px rgba(var(--color-arc-reactor), 0.3),
+    inset 0 0 10px rgba(var(--color-arc-reactor), 0.1);
+  transition: all var(--transition-base);
+  position: relative;
+  overflow: hidden;
+}
+
+.arc-button:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(var(--color-arc-reactor), 0.3),
+    rgba(var(--color-arc-reactor), 0.2)
+  );
+  box-shadow:
+    0 0 20px rgba(var(--color-arc-reactor), 0.6),
+    inset 0 0 15px rgba(var(--color-arc-reactor), 0.2);
+  transform: translateY(-1px);
+}
+
+.arc-button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(var(--color-arc-reactor), 0.3);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.arc-button:active::before {
+  width: 300px;
+  height: 300px;
+}
+
+/* Power Indicator */
+.power-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgb(var(--color-arc-reactor));
+  box-shadow:
+    0 0 8px rgba(var(--color-arc-reactor), 0.8),
+    0 0 16px rgba(var(--color-arc-reactor), 0.6);
+  animation: powerPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes powerPulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+/* Typography - HUD Headers */
+.hud-header {
+  font-family: 'Orbitron', 'Rajdhani', monospace;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgb(var(--color-arc-reactor));
+  text-shadow: 0 0 10px rgba(var(--color-arc-reactor), 0.6);
+}
+
+/* Diagnostic Text */
+.diagnostic-text {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.85rem;
+  color: rgb(var(--color-text-secondary));
+  letter-spacing: 1px;
+}
+
+/* Glassmorphic (HUD Style) */
+.glassmorphic {
+  background: rgba(var(--color-bg-elevated), 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(var(--color-arc-reactor), 0.4);
+  box-shadow:
+    0 0 20px rgba(var(--color-arc-reactor), 0.2),
+    inset 0 0 30px rgba(var(--color-arc-reactor), 0.05);
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  body::before,
+  body::after,
+  .scanlines::before {
+    animation: none;
+  }
+}
