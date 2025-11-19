@@ -107,3 +107,51 @@ Lets start fleshing out the basic features of the project scope. Ensure endpoint
 Enable toggling of the various frontier AI APIs availble as of MON NOV 17 2025. Fetch online information and allow the user to hot swap between models and have particular segments in the .env files
 
 ---
+
+### Prompt Entry #13
+
+**Timestamp:** 2025-11-18T19:54:00Z
+
+after a response finishes, there seems to be a weird slingshot animation before the chatbox settles. check for any edge cases with motion or any other factors that may be contributing to this issue.
+
+I also want you to check the cursorrules file and make a claude rules file to match the protocols. Retroactively sort all of the notes you make in that style and ensure that claude goes through similar development pipelines. If you can add my prompts to the prompt history
+
+---
+
+### Prompt Entry #14
+
+**Timestamp:** 2025-11-18T20:05:00Z
+
+improve on the interfact with the persona management. Create a more responsive interface with more modernized buttons to fit the overarching theme and animations. I want to be able to also directly manipulate the system prompt and which one the chatbot uses dynamically. Be more concise and thorough with user interface components, such that you can save configurations automatically, but also have a direct and responsive real time feature where the user can hot-swap between JSON files
+
+---
+
+### Prompt Entry #15
+
+**Timestamp:** 2025-11-18T20:30:00Z
+
+I want the chatbox to dynamically change the chat bubbles to let the user know who they are talking to.
+
+lets also incorporate tools within our application that allows formatting of math problems, genral markdown formatting, and other features that may exist in modern LLM interfaces. Lets remove branding across the application and change it to (B)est Team. limit branding so its more subtle and elegant.
+
+I also want to incorporate general LLM tools that enable the user to upload photos directly or copy and paste screenshots into the chatbox.
+
+One edit I want to make is to have the glowing animation persistent and fade away over three seconds after finishing response generation. Adjacently fix the persistent yellow/blue asset isue with the user's text box, it currently is persistent after the user enters a query despite the glow disappearing
+
+---
+
+### Prompt Entry #16
+
+**Timestamp:** 2025-11-18T20:45:00Z
+
+there is a small bug where the colorful outine on the user input box rotates like a propller, can you implement the same styling with the AI generated content highlighting animation? Remove the best team header above the application but change the header title to reflect (B)est Team
+
+---
+
+### Prompt Entry #17
+
+**Timestamp:** 2025-11-18T21:00:00Z
+
+the header element still says stark industries, change this to (B)est Team. Additionally, can you remove the background text within the user interface? By default, when there is no conversation history, I want a simple user input text box. I want to create a more compact user experience in which the page header elements and navigation to the different pages are embedded into subtle page layouts. take inspiration from the claude and gemini interfaces where there is a stoway menu on the left side to manage message history and have the perona configuration there as well.
+
+---

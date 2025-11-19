@@ -1,420 +1,594 @@
-'use client';
+"use client";
 
-import { useState, FormEvent, useRef, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Loader2, Copy, Activity } from 'lucide-react';
-import { useStore } from '@/lib/store';
+import { useState, FormEvent, useRef, useEffect, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Send, Loader2, Copy, ImagePlus, X } from "lucide-react";
+import { useStore } from "@/lib/store";
+import ReactMarkdown from "react-markdown";
+import remarkMath from "remark-math";
+import remarkGfm from "remark-gfm";
+import rehypeKatex from "rehype-katex";
+import rehypeHighlight from "rehype-highlight";
+import "katex/dist/katex.min.css";
 
 interface StreamingMessage {
-  id: string;
-  text: string;
-  isComplete: boolean;
+	id: string;
+	text: string;
+	isComplete: boolean;
 }
 
+interface ImageAttachment {
+	id: string;
+	url: string;
+	file: File;
+}
 
-const MessageBubble = ({ message, isUser }: { message: any; isUser: boolean }) => {
-  const [showActions, setShowActions] = useState(false);
+const MessageBubble = ({
+	message,
+	isUser,
+	personaName,
+}: {
+	message: any;
+	isUser: boolean;
+	personaName: string;
+}) => {
+	const [showActions, setShowActions] = useState(false);
+	const [copied, setCopied] = useState(false);
 
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(message.content);
-  };
+	const copyToClipboard = () => {
+		navigator.clipboard.writeText(message.content);
+		setCopied(true);
+		setTimeout(() => setCopied(false), 1500);
+	};
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.3, ease: 'easeOut' }}
-      className={`flex ${isUser ? 'justify-end' : 'justify-start'} group`}
-      onMouseEnter={() => setShowActions(true)}
-      onMouseLeave={() => setShowActions(false)}
-    >
-      <div
-        className={`max-w-[85%] rounded-md px-5 py-3 relative ${
-          isUser
-            ? 'arc-button'
-            : 'hud-panel'
-        }`}
-      >
-        {!isUser && (
-          <div className="flex items-center gap-2 mb-2">
-            <div className="power-indicator" style={{ width: '6px', height: '6px' }} />
-            <span className="diagnostic-text text-xs" style={{ color: 'rgb(var(--color-stark-gold))' }}>
-              TONY STARK
-            </span>
-          </div>
-        )}
-        <p
-          className={`text-sm leading-relaxed whitespace-pre-wrap break-words ${
-            isUser ? '' : 'diagnostic-text'
-          }`}
-          style={{ color: isUser ? 'rgb(var(--color-arc-reactor))' : 'rgb(var(--color-text-secondary))' }}
-        >
-          {message.content}
-        </p>
-        <p
-          className="text-xs mt-2 diagnostic-text"
-          style={{ color: isUser ? 'rgba(var(--color-arc-reactor), 0.6)' : 'rgb(var(--color-text-muted))' }}
-        >
-          {new Date(message.timestamp).toLocaleTimeString()}
-        </p>
-
-        {/* Action Buttons */}
-        <AnimatePresence>
-          {showActions && !isUser && (
-            <motion.div
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -10 }}
-              onClick={copyToClipboard}
-              className="absolute -left-12 top-1/2 -translate-y-1/2 p-2 rounded-md hud-panel cursor-pointer"
-              title="Copy message"
-            >
-              <Copy className="w-4 h-4" style={{ color: 'rgb(var(--color-arc-reactor))' }} />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    </motion.div>
-  );
+	return (
+		<motion.div
+			initial={{ opacity: 0, y: 10 }}
+			animate={{ opacity: 1, y: 0 }}
+			transition={{
+				duration: 0.2,
+				ease: [0.25, 0.1, 0.25, 1]
+			}}
+			className={`flex ${isUser ? "justify-end" : "justify-start"} group`}
+			onMouseEnter={() => setShowActions(true)}
+			onMouseLeave={() => setShowActions(false)}>
+			<div
+				className={`max-w-[85%] rounded-xl px-4 py-3 relative ${
+					isUser ? "modern-message-user" : "modern-message"
+				}`}>
+				{!isUser && (
+					<div className="flex items-center justify-between mb-2">
+						<div className="flex items-center gap-2">
+							<div
+								className="power-indicator"
+								style={{ width: "5px", height: "5px" }}
+							/>
+							<span
+								className="text-xs font-medium"
+								style={{ color: "rgb(var(--color-text-tertiary))" }}>
+								{personaName}
+							</span>
+						</div>
+						{/* Copy button inside message */}
+						<motion.button
+							initial={{ opacity: 0 }}
+							animate={{ opacity: showActions ? 1 : 0 }}
+							transition={{ duration: 0.15 }}
+							onClick={copyToClipboard}
+							className="p-1 rounded hover:bg-white/5 transition-colors"
+							title={copied ? "Copied!" : "Copy message"}>
+							<Copy
+								className="w-3 h-3"
+								style={{
+									color: copied
+										? "rgb(var(--color-accent))"
+										: "rgb(var(--color-text-muted))"
+								}}
+							/>
+						</motion.button>
+					</div>
+				)}
+				<div
+					className="text-[15px] leading-relaxed prose prose-invert prose-sm max-w-none"
+					style={{
+						color: isUser
+							? "rgb(var(--color-text-primary))"
+							: "rgb(var(--color-text-primary))",
+						fontFamily:
+							'-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+						letterSpacing: "-0.01em",
+					}}>
+					{isUser ? (
+						<p className="whitespace-pre-wrap break-words m-0">{message.content}</p>
+					) : (
+						<ReactMarkdown
+							remarkPlugins={[remarkMath, remarkGfm]}
+							rehypePlugins={[rehypeKatex, rehypeHighlight]}
+							components={{
+								p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+								code: ({ className, children, ...props }) => {
+									const isInline = !className;
+									return isInline ? (
+										<code className="px-1.5 py-0.5 rounded text-sm" style={{ background: 'rgba(var(--color-bg-tertiary), 0.8)' }} {...props}>
+											{children}
+										</code>
+									) : (
+										<code className={className} {...props}>
+											{children}
+										</code>
+									);
+								},
+								pre: ({ children }) => (
+									<pre className="rounded-lg p-3 overflow-x-auto text-sm my-2" style={{ background: 'rgba(var(--color-bg-tertiary), 0.8)' }}>
+										{children}
+									</pre>
+								),
+							}}
+						>
+							{message.content}
+						</ReactMarkdown>
+					)}
+				</div>
+				<p
+					className="text-xs mt-2"
+					style={{
+						color: "rgb(var(--color-text-muted))",
+						fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif",
+					}}>
+					{new Date(message.timestamp).toLocaleTimeString([], {
+						hour: "2-digit",
+						minute: "2-digit",
+					})}
+				</p>
+			</div>
+		</motion.div>
+	);
 };
 
 export default function Chatbox() {
-  const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [streamingMessage, setStreamingMessage] = useState<StreamingMessage | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+	const [input, setInput] = useState("");
+	const [isLoading, setIsLoading] = useState(false);
+	const [streamingMessage, setStreamingMessage] =
+		useState<StreamingMessage | null>(null);
+	const [isFocused, setIsFocused] = useState(false);
+	const [personaName, setPersonaName] = useState("Assistant");
+	const [imageAttachments, setImageAttachments] = useState<ImageAttachment[]>([]);
+	const [showGlow, setShowGlow] = useState(false);
+	const messagesEndRef = useRef<HTMLDivElement>(null);
+	const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const {
-    conversations,
-    activeConversationId,
-    createConversation,
-    addMessage,
-    setAgentStatus,
-    setIsStreaming,
-  } = useStore();
+	const {
+		conversations,
+		activeConversationId,
+		activePersonaId,
+		createConversation,
+		addMessage,
+		setAgentStatus,
+		setIsStreaming,
+	} = useStore();
 
-  const activeConversation = conversations.find((c) => c.id === activeConversationId);
-  const messages = useMemo(() => activeConversation?.messages || [], [activeConversation]);
+	// Fetch persona name when activePersonaId changes
+	useEffect(() => {
+		const fetchPersonaName = async () => {
+			try {
+				const response = await fetch(`/api/personas/${activePersonaId}`);
+				if (response.ok) {
+					const data = await response.json();
+					setPersonaName(data.persona?.name || "Assistant");
+				}
+			} catch {
+				setPersonaName("Assistant");
+			}
+		};
+		fetchPersonaName();
+	}, [activePersonaId]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+	const activeConversation = conversations.find(
+		(c) => c.id === activeConversationId
+	);
+	const messages = useMemo(
+		() => activeConversation?.messages || [],
+		[activeConversation]
+	);
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages, streamingMessage]);
+	const scrollToBottom = () => {
+		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+	};
 
-  useEffect(() => {
-    // Create initial conversation if none exists
-    if (conversations.length === 0) {
-      createConversation('tony-stark');
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+	useEffect(() => {
+		scrollToBottom();
+	}, [messages, streamingMessage]);
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+	useEffect(() => {
+		// Create initial conversation if none exists
+		if (conversations.length === 0) {
+			createConversation(activePersonaId);
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
 
-    if (!input.trim() || isLoading) return;
+	const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+		e.preventDefault();
 
-    let conversationId = activeConversationId;
-    if (!conversationId) {
-      conversationId = createConversation('tony-stark');
-    }
+		if (!input.trim() || isLoading) return;
 
-    const userMessageContent = input.trim();
-    setInput('');
-    setIsLoading(true);
-    setAgentStatus({ isThinking: true });
+		let conversationId = activeConversationId;
+		if (!conversationId) {
+			conversationId = createConversation(activePersonaId);
+		}
 
-    // Add user message
-    addMessage(conversationId, {
-      role: 'user',
-      content: userMessageContent,
-    });
+		const userMessageContent = input.trim();
+		setInput("");
+		setIsLoading(true);
+		setAgentStatus({ isThinking: true });
 
-    const streamId = `${Date.now()}-stream`;
-    setStreamingMessage({
-      id: streamId,
-      text: '',
-      isComplete: false,
-    });
+		// Add user message
+		addMessage(conversationId, {
+			role: "user",
+			content: userMessageContent,
+		});
 
-    setIsStreaming(true, streamId);
+		const streamId = `${Date.now()}-stream`;
+		setStreamingMessage({
+			id: streamId,
+			text: "",
+			isComplete: false,
+		});
 
-    try {
-      const conversationHistory = messages.map((msg) => ({
-        role: msg.role,
-        content: msg.content,
-      }));
+		setIsStreaming(true, streamId);
 
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: userMessageContent,
-          personaId: 'tony-stark',
-          conversationHistory,
-        }),
-      });
+		try {
+			const conversationHistory = messages.map((msg) => ({
+				role: msg.role,
+				content: msg.content,
+			}));
 
-      if (!response.ok) {
-        let errorMessage = `Failed to get response (${response.status})`;
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.error || errorMessage;
-        } catch {
-          errorMessage = response.statusText || errorMessage;
-        }
-        throw new Error(errorMessage);
-      }
+			const response = await fetch("/api/chat", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({
+					message: userMessageContent,
+					personaId: activePersonaId,
+					conversationHistory,
+				}),
+			});
 
-      if (!response.body) {
-        throw new Error('No response body');
-      }
+			if (!response.ok) {
+				let errorMessage = `Failed to get response (${response.status})`;
+				try {
+					const errorData = await response.json();
+					errorMessage = errorData.error || errorMessage;
+				} catch {
+					errorMessage = response.statusText || errorMessage;
+				}
+				throw new Error(errorMessage);
+			}
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let accumulatedText = '';
+			if (!response.body) {
+				throw new Error("No response body");
+			}
 
-      while (true) {
-        const { done, value } = await reader.read();
+			const reader = response.body.getReader();
+			const decoder = new TextDecoder();
+			let accumulatedText = "";
 
-        if (done) {
-          if (accumulatedText.trim()) {
-            addMessage(conversationId!, {
-              role: 'assistant',
-              content: accumulatedText,
-            });
-          }
-          setStreamingMessage(null);
-          setIsLoading(false);
-          setAgentStatus({ isThinking: false });
-          setIsStreaming(false);
-          break;
-        }
+			while (true) {
+				const { done, value } = await reader.read();
 
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split('\n');
+				if (done) {
+					if (accumulatedText.trim()) {
+						addMessage(conversationId!, {
+							role: "assistant",
+							content: accumulatedText,
+						});
+					}
+					setStreamingMessage(null);
+					setIsLoading(false);
+					setAgentStatus({ isThinking: false });
+					setIsStreaming(false);
+					// Trigger glow fade animation
+					setShowGlow(true);
+					setTimeout(() => setShowGlow(false), 3000);
+					break;
+				}
 
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = line.slice(6).trim();
+				const chunk = decoder.decode(value, { stream: true });
+				const lines = chunk.split("\n");
 
-            if (data === '[DONE]') {
-              if (accumulatedText.trim()) {
-                addMessage(conversationId!, {
-                  role: 'assistant',
-                  content: accumulatedText,
-                });
-              }
-              setStreamingMessage(null);
-              setIsLoading(false);
-              setAgentStatus({ isThinking: false });
-              setIsStreaming(false);
-              return;
-            }
+				for (const line of lines) {
+					if (line.startsWith("data: ")) {
+						const data = line.slice(6).trim();
 
-            try {
-              const parsed = JSON.parse(data);
+						if (data === "[DONE]") {
+							if (accumulatedText.trim()) {
+								addMessage(conversationId!, {
+									role: "assistant",
+									content: accumulatedText,
+								});
+							}
+							setStreamingMessage(null);
+							setIsLoading(false);
+							setAgentStatus({ isThinking: false });
+							setIsStreaming(false);
+							// Trigger glow fade animation
+							setShowGlow(true);
+							setTimeout(() => setShowGlow(false), 3000);
+							return;
+						}
 
-              if (parsed.error) {
-                addMessage(conversationId!, {
-                  role: 'assistant',
-                  content: parsed.error,
-                });
-                setStreamingMessage(null);
-                setIsLoading(false);
-                setAgentStatus({ isThinking: false });
-                setIsStreaming(false);
-                return;
-              }
+						try {
+							const parsed = JSON.parse(data);
 
-              if (parsed.content) {
-                accumulatedText += parsed.content;
-                setStreamingMessage({
-                  id: streamId,
-                  text: accumulatedText,
-                  isComplete: false,
-                });
-              }
-            } catch (e) {
-              // Skip invalid JSON
-            }
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Error sending message:', error);
-      addMessage(conversationId!, {
-        role: 'assistant',
-        content:
-          error instanceof Error
-            ? error.message
-            : 'Sorry, there was an error processing your message. Please try again.',
-      });
-      setStreamingMessage(null);
-      setAgentStatus({ isThinking: false });
-      setIsStreaming(false);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+							if (parsed.error) {
+								addMessage(conversationId!, {
+									role: "assistant",
+									content: parsed.error,
+								});
+								setStreamingMessage(null);
+								setIsLoading(false);
+								setAgentStatus({ isThinking: false });
+								setIsStreaming(false);
+								return;
+							}
 
-  return (
-    <div className="flex flex-col h-full relative z-10">
-      {/* Scanlines overlay */}
-      <div className="scanlines" />
+							if (parsed.content) {
+								accumulatedText += parsed.content;
+								setStreamingMessage({
+									id: streamId,
+									text: accumulatedText,
+									isComplete: false,
+								});
+							}
+						} catch (e) {
+							// Skip invalid JSON
+						}
+					}
+				}
+			}
+		} catch (error) {
+			console.error("Error sending message:", error);
+			addMessage(conversationId!, {
+				role: "assistant",
+				content:
+					error instanceof Error
+						? error.message
+						: "Sorry, there was an error processing your message. Please try again.",
+			});
+			setStreamingMessage(null);
+			setAgentStatus({ isThinking: false });
+			setIsStreaming(false);
+		} finally {
+			setIsLoading(false);
+		}
+	};
 
-      {/* Messages Container */}
-      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4 min-h-0 relative z-10">
-        {messages.length === 0 && !streamingMessage ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center mt-20"
-          >
-            <motion.div
-              animate={{
-                scale: [1, 1.05, 1],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: 'easeInOut',
-              }}
-              className="inline-block mb-6"
-            >
-              <Activity
-                className="w-16 h-16 arc-glow"
-                style={{ color: 'rgb(var(--color-arc-reactor))' }}
-              />
-            </motion.div>
-            <p
-              className="text-lg hud-header mb-2"
-            >
-              STARK INDUSTRIES
-            </p>
-            <p
-              className="text-sm diagnostic-text"
-              style={{ color: 'rgb(var(--color-text-tertiary))' }}
-            >
-              Ready when you are. What do you need?
-            </p>
-          </motion.div>
-        ) : (
-          <>
-            <AnimatePresence mode="popLayout">
-              {messages.map((message) => (
-                <MessageBubble
-                  key={message.id}
-                  message={message}
-                  isUser={message.role === 'user'}
-                />
-              ))}
-            </AnimatePresence>
+	return (
+		<div className="flex flex-col h-full relative z-10">
+			{/* Scanlines overlay */}
+			<div className="scanlines" />
 
-            {streamingMessage && (
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="flex justify-start"
-              >
-                <div className="max-w-[85%] rounded-md px-5 py-3 hud-panel">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="power-indicator" style={{ width: '6px', height: '6px' }} />
-                    <span className="diagnostic-text text-xs" style={{ color: 'rgb(var(--color-stark-gold))' }}>
-                      TONY STARK
-                    </span>
-                  </div>
-                  <p
-                    className="text-sm leading-relaxed whitespace-pre-wrap break-words diagnostic-text"
-                    style={{ color: 'rgb(var(--color-text-secondary))' }}
-                  >
-                    {streamingMessage.text}
-                    <motion.span
-                      animate={{ opacity: [0, 1, 0] }}
-                      transition={{ duration: 1, repeat: Infinity }}
-                      className="inline-block ml-1 w-1 h-4"
-                      style={{ background: 'rgb(var(--color-arc-reactor))' }}
-                    />
-                  </p>
-                </div>
-              </motion.div>
-            )}
-          </>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
+			{/* Messages Container */}
+			<div className="flex-1 overflow-y-auto px-6 py-8 space-y-6 min-h-0 relative z-10">
+				{messages.length === 0 && !streamingMessage ? (
+					<div className="h-full" />
+				) : (
+					<>
+						<AnimatePresence mode="sync">
+							{messages.map((message) => (
+								<MessageBubble
+									key={message.id}
+									message={message}
+									isUser={message.role === "user"}
+									personaName={personaName}
+								/>
+							))}
+						</AnimatePresence>
 
-      {/* Input Form */}
-      <div className="shrink-0 p-4 border-t relative z-10" style={{ borderColor: 'rgba(var(--color-arc-reactor), 0.3)' }}>
-        <form onSubmit={handleSubmit} className="relative">
-          <div className="relative holo-border">
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Enter command..."
-              className="w-full px-5 py-4 pr-14 rounded-md diagnostic-text focus:outline-none transition-all duration-200"
-              style={{
-                background: 'rgba(var(--color-bg-elevated), 0.9)',
-                borderColor: 'rgba(var(--color-arc-reactor), 0.4)',
-                color: 'rgb(var(--color-text-primary))',
-              }}
-              disabled={isLoading}
-            />
-            <motion.button
-              type="submit"
-              disabled={!input.trim() || isLoading}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-3 rounded-md arc-button disabled:opacity-50 disabled:cursor-not-allowed"
-              whileHover={{ scale: input.trim() && !isLoading ? 1.05 : 1 }}
-              whileTap={{ scale: input.trim() && !isLoading ? 0.95 : 1 }}
-            >
-              {isLoading ? (
-                <Loader2 className="w-5 h-5 animate-spin" style={{ color: 'rgb(var(--color-arc-reactor))' }} />
-              ) : (
-                <Send className="w-5 h-5" style={{ color: 'rgb(var(--color-arc-reactor))' }} />
-              )}
-            </motion.button>
-          </div>
-        </form>
+						<AnimatePresence mode="wait">
+							{streamingMessage && (
+								<motion.div
+									key="streaming"
+									initial={{ opacity: 0, y: 10 }}
+									animate={{ opacity: 1, y: 0 }}
+									exit={{ opacity: 0 }}
+									transition={{
+										duration: 0.15,
+										ease: [0.25, 0.1, 0.25, 1]
+									}}
+									className="flex justify-start">
+									<div className="max-w-[85%] rounded-xl px-4 py-3 modern-message gemini-border ai-thinking">
+										<div className="flex items-center gap-2 mb-2">
+											<div
+												className="power-indicator"
+												style={{ width: "5px", height: "5px" }}
+											/>
+											<span
+												className="text-xs font-medium"
+												style={{ color: "rgb(var(--color-text-tertiary))" }}>
+												{personaName}
+											</span>
+										</div>
+										<p
+											className="text-[15px] leading-relaxed whitespace-pre-wrap break-words"
+											style={{
+												color: "rgb(var(--color-text-primary))",
+												fontFamily:
+													'-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+												letterSpacing: "-0.01em",
+											}}>
+											{streamingMessage.text}
+											<motion.span
+												animate={{ opacity: [0.4, 1, 0.4] }}
+												transition={{
+													duration: 1.2,
+													repeat: Infinity,
+													ease: "easeInOut",
+												}}
+												className="inline-block ml-0.5 w-0.5 h-4 align-middle"
+												style={{ background: "rgb(var(--color-accent))" }}
+											/>
+										</p>
+									</div>
+								</motion.div>
+							)}
+						</AnimatePresence>
+					</>
+				)}
+				<div ref={messagesEndRef} />
+			</div>
 
-        {isLoading && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mt-3 flex items-center gap-3"
-          >
-            <div className="flex gap-1.5">
-              {[0, 1, 2].map((i) => (
-                <motion.div
-                  key={i}
-                  className="w-2 h-2 rounded-full"
-                  style={{ background: 'rgb(var(--color-arc-reactor))' }}
-                  animate={{
-                    scale: [1, 1.3, 1],
-                    opacity: [0.4, 1, 0.4],
-                  }}
-                  transition={{
-                    duration: 1.2,
-                    repeat: Infinity,
-                    delay: i * 0.2,
-                  }}
-                />
-              ))}
-            </div>
-            <span
-              className="text-xs diagnostic-text"
-              style={{ color: 'rgb(var(--color-text-tertiary))' }}
-            >
-              Processing request...
-            </span>
-          </motion.div>
-        )}
-      </div>
-    </div>
-  );
+			{/* Input Form */}
+			<div
+				className="shrink-0 p-6 border-t relative z-10"
+				style={{ borderColor: "rgba(var(--color-border), 0.1)" }}>
+				<form onSubmit={handleSubmit} className="relative">
+					{/* Image attachments preview */}
+					{imageAttachments.length > 0 && (
+						<div className="flex gap-2 mb-3 flex-wrap">
+							{imageAttachments.map((img) => (
+								<div key={img.id} className="relative group">
+									<img
+										src={img.url}
+										alt="Attachment"
+										className="w-16 h-16 object-cover rounded-lg border"
+										style={{ borderColor: 'rgba(var(--color-border), 0.3)' }}
+									/>
+									<button
+										type="button"
+										onClick={() => {
+											URL.revokeObjectURL(img.url);
+											setImageAttachments(prev => prev.filter(a => a.id !== img.id));
+										}}
+										className="absolute -top-2 -right-2 p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+										style={{ background: 'rgb(var(--color-error))' }}
+									>
+										<X className="w-3 h-3 text-white" />
+									</button>
+								</div>
+							))}
+						</div>
+					)}
+
+					<div className="relative flex items-center gap-3">
+						{/* Hidden file input */}
+						<input
+							type="file"
+							ref={fileInputRef}
+							accept="image/*"
+							multiple
+							className="hidden"
+							onChange={(e) => {
+								const files = Array.from(e.target.files || []);
+								const newAttachments = files.map(file => ({
+									id: `${Date.now()}-${Math.random()}`,
+									url: URL.createObjectURL(file),
+									file,
+								}));
+								setImageAttachments(prev => [...prev, ...newAttachments]);
+								e.target.value = '';
+							}}
+						/>
+
+						{/* Image upload button */}
+						<motion.button
+							type="button"
+							onClick={() => fileInputRef.current?.click()}
+							className="shrink-0 p-3.5 rounded-lg transition-colors"
+							style={{
+								background: 'rgba(var(--color-bg-tertiary), 0.8)',
+								color: 'rgb(var(--color-text-tertiary))'
+							}}
+							whileHover={{ scale: 1.02 }}
+							whileTap={{ scale: 0.98 }}
+							title="Upload image"
+						>
+							<ImagePlus className="w-5 h-5" />
+						</motion.button>
+
+						<div className={`flex-1 rounded-lg input-wrapper ${isFocused ? "focused" : ""} ${showGlow && !isFocused ? "glow-fade" : ""}`}>
+							<input
+								type="text"
+								value={input}
+								onChange={(e) => setInput(e.target.value)}
+								onFocus={() => setIsFocused(true)}
+								onBlur={() => setIsFocused(false)}
+								onPaste={(e) => {
+									const items = Array.from(e.clipboardData.items);
+									const imageItems = items.filter(item => item.type.startsWith('image/'));
+									if (imageItems.length > 0) {
+										e.preventDefault();
+										const newAttachments = imageItems.map(item => {
+											const file = item.getAsFile();
+											if (file) {
+												return {
+													id: `${Date.now()}-${Math.random()}`,
+													url: URL.createObjectURL(file),
+													file,
+												};
+											}
+											return null;
+										}).filter(Boolean) as ImageAttachment[];
+										setImageAttachments(prev => [...prev, ...newAttachments]);
+									}
+								}}
+								placeholder={`Message ${personaName}...`}
+								className="w-full px-4 py-3.5 rounded-lg focus:outline-none transition-all duration-200 modern-input"
+								disabled={isLoading}
+							/>
+						</div>
+						<motion.button
+							type="submit"
+							disabled={(!input.trim() && imageAttachments.length === 0) || isLoading}
+							className="shrink-0 p-3.5 rounded-lg modern-button disabled:opacity-40 disabled:cursor-not-allowed"
+							whileHover={{ scale: (input.trim() || imageAttachments.length > 0) && !isLoading ? 1.02 : 1 }}
+							whileTap={{ scale: (input.trim() || imageAttachments.length > 0) && !isLoading ? 0.98 : 1 }}>
+							{isLoading ? (
+								<Loader2 className="w-5 h-5 animate-spin" />
+							) : (
+								<Send className="w-5 h-5" />
+							)}
+						</motion.button>
+					</div>
+				</form>
+
+				<AnimatePresence mode="wait">
+					{isLoading && (
+						<motion.div
+							key="loading"
+							initial={{ opacity: 0, y: -5 }}
+							animate={{ opacity: 1, y: 0 }}
+							exit={{ opacity: 0, y: -5 }}
+							transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
+							className="mt-3 flex items-center gap-3">
+							<div className="flex gap-1.5">
+								{[0, 1, 2].map((i) => (
+									<motion.div
+										key={i}
+										className="w-2 h-2 rounded-full"
+										style={{ background: "rgb(var(--color-arc-reactor))" }}
+										animate={{
+											scale: [1, 1.3, 1],
+											opacity: [0.4, 1, 0.4],
+										}}
+										transition={{
+											duration: 1.2,
+											repeat: Infinity,
+											delay: i * 0.2,
+										}}
+									/>
+								))}
+							</div>
+							<span
+								className="text-xs diagnostic-text"
+								style={{ color: "rgb(var(--color-text-tertiary))" }}>
+								Processing request...
+							</span>
+						</motion.div>
+					)}
+				</AnimatePresence>
+			</div>
+		</div>
+	);
 }

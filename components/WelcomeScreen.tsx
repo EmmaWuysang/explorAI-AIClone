@@ -116,7 +116,8 @@ export default function WelcomeScreen({ onDismiss }: WelcomeScreenProps) {
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.5, duration: 0.6 }}
           >
-            <span className="text-arc-gradient">J.A.R.V.I.S.</span>
+            <span className="text-arc-gradient" style={{ opacity: 0.6 }}>(B)</span>
+            <span className="text-arc-gradient">est Team</span>
           </motion.h1>
 
           <motion.p
@@ -126,7 +127,7 @@ export default function WelcomeScreen({ onDismiss }: WelcomeScreenProps) {
             transition={{ delay: 0.6, duration: 0.6 }}
             style={{ color: 'rgb(var(--color-text-secondary))' }}
           >
-            <span className="diagnostic-text">Just A Rather Very Intelligent System</span>
+            <span className="diagnostic-text">AI-Powered Assistant</span>
           </motion.p>
 
           <motion.p
@@ -136,7 +137,7 @@ export default function WelcomeScreen({ onDismiss }: WelcomeScreenProps) {
             transition={{ delay: 0.7, duration: 0.6 }}
             style={{ color: 'rgb(var(--color-text-tertiary))' }}
           >
-            Powered by Stark Industries Technology
+            Built with modern LLM technology
           </motion.p>
 
           <motion.button
@@ -214,7 +215,7 @@ export default function WelcomeScreen({ onDismiss }: WelcomeScreenProps) {
           transition={{ delay: 1.5, duration: 0.6 }}
         >
           <p className="diagnostic-text text-xs" style={{ color: 'rgb(var(--color-text-muted))' }}>
-            STARK INDUSTRIES // PROPRIETARY TECHNOLOGY // AUTHORIZED USE ONLY
+            (B)EST TEAM // AI ASSISTANT // READY TO HELP
           </p>
         </motion.div>
 

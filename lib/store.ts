@@ -34,10 +34,23 @@ export interface AgentStatus {
   toolProgress?: string;
 }
 
+export interface Persona {
+  id: string;
+  name: string;
+  description: string;
+  systemPrompt: string;
+  temperature: number;
+  maxTokens: number;
+  model: string;
+}
+
 interface AppState {
   // Conversations
   conversations: Conversation[];
   activeConversationId: string | null;
+
+  // Persona
+  activePersonaId: string;
 
   // Agent Status
   agentStatus: AgentStatus;
@@ -58,10 +71,13 @@ interface AppState {
   setAgentStatus: (status: Partial<AgentStatus>) => void;
   setIsStreaming: (isStreaming: boolean, messageId?: string) => void;
 
+  setActivePersona: (personaId: string) => void;
+
   addToolCall: (conversationId: string, messageId: string, toolCall: ToolCall) => void;
   updateToolCall: (conversationId: string, messageId: string, toolCallId: string, update: Partial<ToolCall>) => void;
 
   clearAllConversations: () => void;
+  cleanupEmptyConversations: () => void;
 }
 
 const generateId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -72,6 +88,7 @@ export const useStore = create<AppState>()(
       // Initial State
       conversations: [],
       activeConversationId: null,
+      activePersonaId: 'tony-stark',
       agentStatus: {
         isThinking: false,
         isUsingTool: false,
@@ -181,6 +198,10 @@ export const useStore = create<AppState>()(
         set({ isStreaming, streamingMessageId: messageId || null });
       },
 
+      setActivePersona: (personaId: string) => {
+        set({ activePersonaId: personaId });
+      },
+
       addToolCall: (conversationId: string, messageId: string, toolCall: ToolCall) => {
         set((state) => ({
           conversations: state.conversations.map((conv) =>
@@ -228,6 +249,27 @@ export const useStore = create<AppState>()(
       clearAllConversations: () => {
         set({ conversations: [], activeConversationId: null });
       },
+
+      cleanupEmptyConversations: () => {
+        set((state) => {
+          // Filter out conversations with no user messages
+          const nonEmptyConversations = state.conversations.filter((conv) =>
+            conv.messages.some((msg) => msg.role === 'user')
+          );
+
+          // If active conversation was deleted, select the first remaining one
+          const activeWasDeleted = !nonEmptyConversations.some(
+            (c) => c.id === state.activeConversationId
+          );
+
+          return {
+            conversations: nonEmptyConversations,
+            activeConversationId: activeWasDeleted
+              ? nonEmptyConversations[0]?.id || null
+              : state.activeConversationId,
+          };
+        });
+      },
     }),
     {
       name: 'explorAI-storage',
@@ -235,6 +277,7 @@ export const useStore = create<AppState>()(
       partialize: (state) => ({
         conversations: state.conversations,
         activeConversationId: state.activeConversationId,
+        activePersonaId: state.activePersonaId,
       }),
     }
   )
