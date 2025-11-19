@@ -53,9 +53,9 @@ export async function POST(request: NextRequest) {
 		}
 
 		// Validate API key
-		const apiKey = process.env.OPENAI_API_KEY;
+		const apiKey = process.env.GOOGLE_API_KEY;
 		console.log(
-			"[API] OPENAI_API_KEY exists:",
+			"[API] GOOGLE_API_KEY exists:",
 			!!apiKey,
 			"length:",
 			apiKey?.length || 0
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
 			return new Response(
 				JSON.stringify({
 					error:
-						"OpenAI API key not configured. Please add OPENAI_API_KEY to your .env file.",
+						"Google API key not configured. Please add GOOGLE_API_KEY to your .env file.",
 				}),
 				{ status: 500, headers: { "Content-Type": "application/json" } }
 			);
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
 		const stream = new ReadableStream({
 			async start(controller) {
 				try {
-					const modelId = persona.model || "gpt-4o-mini";
+					const modelId = persona.model || "gemini-2.5-flash";
 
 					const streamGenerator = AIClient.streamChat(modelId, messages, {
 						temperature: persona.temperature ?? 0.7,

@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import { GoogleGenAI } from "@google/genai";
 
 interface ChatMessage {
   role: "system" | "user" | "assistant";
@@ -20,41 +20,79 @@ export class AIClient {
       maxTokens?: number;
     } = {}
   ): AsyncGenerator<StreamChunk, void, unknown> {
-    const apiKey = process.env.OPENAI_API_KEY;
+    const apiKey = process.env.GOOGLE_API_KEY;
 
     if (!apiKey) {
       yield {
         error:
-          "OpenAI API key not configured. Please add OPENAI_API_KEY to your .env file.",
+          "Google API key not configured. Please add GOOGLE_API_KEY to your .env file.",
       };
       return;
     }
 
-    const openai = new OpenAI({ apiKey });
+    const ai = new GoogleGenAI({ apiKey });
 
     try {
-      const stream = await openai.chat.completions.create({
+      // Extract system instruction from messages
+      const systemMessage = messages.find((m) => m.role === "system");
+      const systemInstruction = systemMessage?.content;
+
+      // Build conversation history for Gemini format
+      // Filter out system messages and convert to Gemini's format
+      const history: Array<{
+        role: "user" | "model";
+        parts: Array<{ text: string }>;
+      }> = [];
+
+      const conversationMessages = messages.filter((m) => m.role !== "system");
+
+      // All messages except the last one go into history
+      for (let i = 0; i < conversationMessages.length - 1; i++) {
+        const msg = conversationMessages[i];
+        history.push({
+          role: msg.role === "user" ? "user" : "model",
+          parts: [{ text: msg.content }],
+        });
+      }
+
+      // Get the last message as the current user message
+      const lastMessage = conversationMessages[conversationMessages.length - 1];
+
+      if (!lastMessage || lastMessage.role !== "user") {
+        yield { error: "No user message found" };
+        return;
+      }
+
+      // Create chat session with history and system instruction
+      const chat = ai.chats.create({
         model: modelId,
-        messages: messages,
-        temperature: options.temperature ?? 0.7,
-        max_tokens: options.maxTokens ?? 2048,
-        stream: true,
+        history: history,
+        config: {
+          systemInstruction: systemInstruction,
+          temperature: options.temperature ?? 0.7,
+          maxOutputTokens: options.maxTokens ?? 2048,
+        },
+      });
+
+      // Stream the response
+      const stream = await chat.sendMessageStream({
+        message: lastMessage.content,
       });
 
       for await (const chunk of stream) {
-        const content = chunk.choices[0]?.delta?.content || "";
-        if (content) {
-          yield { content };
+        const text = chunk.text;
+        if (text) {
+          yield { content: text };
         }
       }
 
       yield { done: true };
     } catch (error) {
-      console.error("[AI Client] OpenAI API error:", error);
+      console.error("[AI Client] Gemini API error:", error);
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
       yield {
-        error: `OpenAI API error: ${errorMessage}`,
+        error: `Gemini API error: ${errorMessage}`,
       };
     }
   }
