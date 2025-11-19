@@ -102,8 +102,18 @@ const MessageBubble = ({
 						<p className="whitespace-pre-wrap break-words m-0">{message.content}</p>
 					) : (
 						<ReactMarkdown
-							remarkPlugins={[remarkMath, remarkGfm]}
-							rehypePlugins={[rehypeKatex, rehypeHighlight]}
+							remarkPlugins={[
+								[remarkMath, { singleDollarTextMath: true }],
+								remarkGfm
+							]}
+							rehypePlugins={[
+								[rehypeKatex, {
+									strict: false,
+									trust: true,
+									output: 'html'
+								}],
+								rehypeHighlight
+							]}
 							components={{
 								p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
 								code: ({ className, children, ...props }) => {
@@ -552,42 +562,6 @@ export default function Chatbox() {
 						</motion.button>
 					</div>
 				</form>
-
-				<AnimatePresence mode="wait">
-					{isLoading && (
-						<motion.div
-							key="loading"
-							initial={{ opacity: 0, y: -5 }}
-							animate={{ opacity: 1, y: 0 }}
-							exit={{ opacity: 0, y: -5 }}
-							transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
-							className="mt-3 flex items-center gap-3">
-							<div className="flex gap-1.5">
-								{[0, 1, 2].map((i) => (
-									<motion.div
-										key={i}
-										className="w-2 h-2 rounded-full"
-										style={{ background: "rgb(var(--color-arc-reactor))" }}
-										animate={{
-											scale: [1, 1.3, 1],
-											opacity: [0.4, 1, 0.4],
-										}}
-										transition={{
-											duration: 1.2,
-											repeat: Infinity,
-											delay: i * 0.2,
-										}}
-									/>
-								))}
-							</div>
-							<span
-								className="text-xs diagnostic-text"
-								style={{ color: "rgb(var(--color-text-tertiary))" }}>
-								Processing request...
-							</span>
-						</motion.div>
-					)}
-				</AnimatePresence>
 			</div>
 		</div>
 	);

@@ -26,8 +26,12 @@ interface Persona {
 export default function Sidebar() {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const [personas, setPersonas] = useState<Persona[]>([]);
   const [showPersonas, setShowPersonas] = useState(false);
+
+  // Determine if sidebar should show expanded (either not collapsed or being hovered)
+  const showExpanded = !isCollapsed || isHovered;
 
   const {
     conversations,
@@ -75,20 +79,22 @@ export default function Sidebar() {
   return (
     <motion.aside
       initial={false}
-      animate={{ width: isCollapsed ? 60 : 280 }}
+      animate={{ width: showExpanded ? 280 : 60 }}
       transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
       className="h-screen flex flex-col border-r"
       style={{
         background: 'rgb(var(--color-bg-secondary))',
         borderColor: 'rgba(var(--color-border), 0.3)',
       }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       {/* Header */}
       <div
         className="h-14 flex items-center justify-between px-3 border-b shrink-0"
         style={{ borderColor: 'rgba(var(--color-border), 0.3)' }}
       >
-        {!isCollapsed && (
+        {showExpanded && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -138,13 +144,13 @@ export default function Sidebar() {
           whileTap={{ scale: 0.98 }}
         >
           <Plus className="w-4 h-4" />
-          {!isCollapsed && <span className="text-sm font-medium">New Chat</span>}
+          {showExpanded && <span className="text-sm font-medium">New Chat</span>}
         </motion.button>
       </div>
 
       {/* Conversations List */}
       <div className="flex-1 overflow-y-auto px-3 space-y-1">
-        {!isCollapsed && (
+        {showExpanded && (
           <p
             className="text-xs font-medium uppercase tracking-wider px-2 py-2"
             style={{ color: 'rgb(var(--color-text-muted))' }}
@@ -177,7 +183,7 @@ export default function Sidebar() {
                     : 'rgb(var(--color-text-muted))',
                 }}
               />
-              {!isCollapsed && (
+              {showExpanded && (
                 <>
                   <span
                     className="flex-1 text-sm truncate"
@@ -202,7 +208,7 @@ export default function Sidebar() {
             </motion.div>
           ))}
         </AnimatePresence>
-        {conversations.length === 0 && !isCollapsed && (
+        {conversations.length === 0 && showExpanded && (
           <p
             className="text-xs text-center py-4"
             style={{ color: 'rgb(var(--color-text-muted))' }}
@@ -217,7 +223,7 @@ export default function Sidebar() {
         className="p-3 border-t shrink-0"
         style={{ borderColor: 'rgba(var(--color-border), 0.3)' }}
       >
-        {!isCollapsed ? (
+        {showExpanded ? (
           <div className="space-y-2">
             <p
               className="text-xs font-medium uppercase tracking-wider px-2 py-1"

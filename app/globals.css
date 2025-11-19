@@ -659,3 +659,30 @@ pre code {
     animation: none;
   }
 }
+
+/* KaTeX Math Rendering Styles */
+.katex {
+  font-size: 1.1em;
+  color: rgb(var(--color-text-primary));
+}
+
+.katex-display {
+  margin: 1rem 0;
+  padding: 1rem;
+  background: rgba(var(--color-bg-tertiary), 0.5);
+  border-radius: 0.5rem;
+  overflow-x: auto;
+}
+
+.katex-display > .katex {
+  font-size: 1.2em;
+}
+
+/* Ensure math renders nicely in prose */
+.prose .katex-display {
+  text-align: center;
+}
+
+.prose .katex {
+  color: rgb(var(--color-accent-light));
+}
