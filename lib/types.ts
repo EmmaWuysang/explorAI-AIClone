@@ -18,6 +18,22 @@ export interface Medication {
   interactions?: string[];
 }
 
+export interface InventoryItem {
+  id: string;
+  name: string;
+  genericName: string;
+  category: 'Antibiotic' | 'Pain Management' | 'Cardiovascular' | 'Antidepressant' | 'Antihistamine' | 'Diabetes' | 'Other';
+  description: string;
+  sideEffects: string[];
+  price: number;
+  stockLevel: number;
+  dosageForm: string;
+  strength: string;
+  manufacturer: string;
+  requiresPrescription: boolean;
+  imageUrl?: string;
+}
+
 export interface Prescription {
   id: string;
   medicationId: string;
