@@ -104,16 +104,12 @@ const ClinicMap = forwardRef<ClinicMapRef, ClinicMapProps>(({ locations, onLocat
 
   // Initialize Map
   useEffect(() => {
-    console.log("ClinicMap: useEffect triggered", { isLoaded, hasMapRef: !!mapRef.current, hasMapInstance: !!mapInstance });
     const initMap = async () => {
       if (isLoaded && mapRef.current && !mapInstance) {
-        console.log("ClinicMap: Starting initMap");
         try {
           // Use importLibrary to safely load the Map and Places classes
-          console.log("ClinicMap: Importing libraries...");
           const { Map } = await google.maps.importLibrary("maps") as google.maps.MapsLibrary;
           const { PlacesService } = await google.maps.importLibrary("places") as google.maps.PlacesLibrary;
-          console.log("ClinicMap: Libraries imported");
 
           const map = new Map(mapRef.current, {
             center: { lat: 37.7749, lng: -122.4194 },
@@ -123,15 +119,12 @@ const ClinicMap = forwardRef<ClinicMapRef, ClinicMapProps>(({ locations, onLocat
             disableDefaultUI: true,
             zoomControl: true,
           });
-          console.log("ClinicMap: Map instance created", map);
           setMapInstance(map);
           placesServiceRef.current = new PlacesService(map);
         } catch (e) {
           console.error("Error initializing map:", e);
           setMapError("Failed to initialize map. Please check API key permissions.");
         }
-      } else {
-        console.log("ClinicMap: Skipping initMap", { isLoaded, hasMapRef: !!mapRef.current, hasMapInstance: !!mapInstance });
       }
     };
 
