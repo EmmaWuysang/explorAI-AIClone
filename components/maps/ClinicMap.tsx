@@ -50,7 +50,9 @@ const ClinicMap = forwardRef<ClinicMapRef, ClinicMapProps>(({ locations, onLocat
   }));
 
   const clearMarkers = () => {
-    markersRef.current.forEach(marker => marker.setMap(null));
+    markersRef.current.forEach(marker => {
+      marker.map = null;
+    });
     markersRef.current = [];
   };
 
