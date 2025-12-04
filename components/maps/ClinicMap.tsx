@@ -18,7 +18,7 @@ const ClinicMap = forwardRef<ClinicMapRef, ClinicMapProps>(({ locations, onLocat
   const { isLoaded, loadError } = useMap();
   const mapRef = useRef<HTMLDivElement>(null);
   const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
-  const markersRef = useRef<google.maps.Marker[]>([]);
+  const markersRef = useRef<(google.maps.Marker | google.maps.marker.AdvancedMarkerElement)[]>([]);
   const placesServiceRef = useRef<google.maps.places.PlacesService | null>(null);
   const [mapError, setMapError] = useState<string | null>(null);
 
@@ -57,19 +57,23 @@ const ClinicMap = forwardRef<ClinicMapRef, ClinicMapProps>(({ locations, onLocat
   const createMarker = async (place: google.maps.places.PlaceResult) => {
     if (!mapInstance || !place.geometry || !place.geometry.location) return;
 
-    const { Marker } = await google.maps.importLibrary("marker") as google.maps.MarkerLibrary;
+    const { AdvancedMarkerElement } = await google.maps.importLibrary("marker") as google.maps.MarkerLibrary;
 
     const isPharmacy = place.types?.includes('pharmacy');
-    const marker = new Marker({
+    
+    // Create DOM element for marker content
+    const iconImg = document.createElement('img');
+    iconImg.src = isPharmacy 
+      ? 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png' 
+      : 'https://maps.google.com/mapfiles/ms/icons/red-dot.png';
+    iconImg.width = 32;
+    iconImg.height = 32;
+
+    const marker = new AdvancedMarkerElement({
       map: mapInstance,
       position: place.geometry.location,
       title: place.name,
-      animation: google.maps.Animation.DROP,
-      icon: {
-        url: isPharmacy
-          ? 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png' 
-          : 'https://maps.google.com/mapfiles/ms/icons/red-dot.png'
-      }
+      content: iconImg,
     });
 
     const locationData: Location = {
@@ -88,7 +92,7 @@ const ClinicMap = forwardRef<ClinicMapRef, ClinicMapProps>(({ locations, onLocat
       if (onLocationSelect) onLocationSelect(locationData);
     });
 
-    markersRef.current.push(marker);
+    markersRef.current.push(marker as unknown as google.maps.Marker); // Type cast for compatibility with ref
   };
 
   // Initialize Map
@@ -103,6 +107,7 @@ const ClinicMap = forwardRef<ClinicMapRef, ClinicMapProps>(({ locations, onLocat
           const map = new Map(mapRef.current, {
             center: { lat: 37.7749, lng: -122.4194 },
             zoom: 13,
+            mapId: "DEMO_MAP_ID", // Required for AdvancedMarkerElement
             styles: [
               { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
               { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
@@ -136,24 +141,51 @@ const ClinicMap = forwardRef<ClinicMapRef, ClinicMapProps>(({ locations, onLocat
     initMap();
   }, [isLoaded, mapInstance]);
 
-  // Auto-search
+  // Auto-search using new Places API
   useEffect(() => {
-    if (mapInstance && placesServiceRef.current) {
-      const searchNearby = (type: string) => {
-        const request: google.maps.places.PlaceSearchRequest = {
-          location: mapInstance.getCenter()!,
-          radius: 5000,
-          type: type
-        };
+    if (mapInstance) {
+      const searchNearby = async (type: string) => {
+        try {
+          const { Place, SearchNearbyRankPreference } = await google.maps.importLibrary("places") as google.maps.PlacesLibrary;
+          
+          // The new API uses Place.searchNearby
+          const center = mapInstance.getCenter();
+          if (!center) return;
 
-        placesServiceRef.current?.nearbySearch(request, (results, status) => {
-          if (status === google.maps.places.PlacesServiceStatus.OK && results) {
-            results.forEach(place => createMarker(place));
-          } else if (status === google.maps.places.PlacesServiceStatus.REQUEST_DENIED) {
-             console.error("Places API Request Denied. Check API Key permissions.");
-             setMapError("Places API Request Denied. Please enable 'Places API' in Google Cloud Console.");
+          const request = {
+            fields: ['displayName', 'location', 'formattedAddress', 'id', 'types', 'rating', 'regularOpeningHours'],
+            locationRestriction: {
+              center: center,
+              radius: 5000,
+            },
+            includedPrimaryTypes: [type], // 'pharmacy', 'doctor', 'hospital'
+            maxResultCount: 10,
+            rankPreference: SearchNearbyRankPreference.POPULARITY,
+          };
+
+          // @ts-ignore - Types might not be fully updated for new API yet
+          const { places } = await Place.searchNearby(request);
+
+          if (places) {
+            places.forEach((place: any) => {
+              // Convert new Place object to compatible format for createMarker
+              const placeResult: any = {
+                name: place.displayName,
+                geometry: { location: place.location },
+                formatted_address: place.formattedAddress,
+                place_id: place.id,
+                types: place.types,
+                rating: place.rating,
+                opening_hours: { isOpen: () => place.regularOpeningHours?.isOpen },
+                vicinity: place.formattedAddress // Fallback
+              };
+              createMarker(placeResult);
+            });
           }
-        });
+        } catch (e) {
+          console.error(`Error searching for ${type}:`, e);
+          // Fallback or silent fail
+        }
       };
 
       clearMarkers();
