@@ -4,7 +4,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import GlassCard from '@/components/ui/GlassCard';
 import Button from '@/components/ui/Button';
 import StatCard from '@/components/ui/StatCard';
-import { Plus, Check, Clock, Pill, Activity, MapPin, Search, ShoppingBag, ShoppingCart } from 'lucide-react';
+import { Plus, Check, Clock, Pill, Activity, MapPin, Search, ShoppingBag, ShoppingCart, X, Star, Phone, Globe } from 'lucide-react';
 import ClinicMap, { ClinicMapRef } from '@/components/maps/ClinicMap';
 import MapProvider from '@/components/maps/MapProvider';
 import { Location } from '@/lib/db/mock-db';
