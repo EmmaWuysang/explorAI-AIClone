@@ -99,7 +99,7 @@ const ClinicMap = forwardRef<ClinicMapRef, ClinicMapProps>(({ locations, onLocat
             lat: place.location.lat(),
             lng: place.location.lng(),
             rating: place.rating,
-            isOpen: place.regularOpeningHours?.isOpen(),
+            isOpen: place.isOpen ? place.isOpen() : (place.regularOpeningHours && 'isOpen' in place.regularOpeningHours && typeof place.regularOpeningHours.isOpen === 'function' ? place.regularOpeningHours.isOpen() : undefined),
             phone: place.nationalPhoneNumber,
             website: place.websiteURI
           };
@@ -116,7 +116,7 @@ const ClinicMap = forwardRef<ClinicMapRef, ClinicMapProps>(({ locations, onLocat
             lat: place.location.lat(),
             lng: place.location.lng(),
             rating: place.rating,
-            isOpen: place.regularOpeningHours?.isOpen(),
+            isOpen: place.isOpen ? place.isOpen() : undefined,
             phone: ''
           };
           onLocationSelect(locationData);
