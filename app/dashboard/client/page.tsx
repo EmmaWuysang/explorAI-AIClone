@@ -15,7 +15,7 @@ export default function ClientDashboard() {
         <div className="md:col-span-2 glass-card p-6">
           <h3 className="text-xl font-semibold mb-6 text-gray-900 dark:text-white flex items-center gap-2">
             <span className="w-2 h-6 bg-blue-500 rounded-full"></span>
-            Today's Reminders
+            Today&apos;s Reminders
           </h3>
           <div className="space-y-4">
             {/* Reminder Item */}
