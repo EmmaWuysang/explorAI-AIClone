@@ -20,6 +20,7 @@ const ClinicMap = forwardRef<ClinicMapRef, ClinicMapProps>(({ locations, onLocat
   const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);
   const placesServiceRef = useRef<google.maps.places.PlacesService | null>(null);
+  const [mapError, setMapError] = useState<string | null>(null);
 
   // Expose search method
   useImperativeHandle(ref, () => ({
@@ -29,22 +30,17 @@ const ClinicMap = forwardRef<ClinicMapRef, ClinicMapProps>(({ locations, onLocat
       const request = {
         query: query,
         fields: ['name', 'geometry', 'formatted_address', 'place_id', 'types'],
-        locationBias: mapInstance.getBounds(), // Bias towards current view
+        locationBias: mapInstance.getBounds(),
       };
 
       placesServiceRef.current.findPlaceFromQuery(request, (results, status) => {
         if (status === google.maps.places.PlacesServiceStatus.OK && results && results.length > 0) {
           clearMarkers();
-          
           const bounds = new google.maps.LatLngBounds();
-
           results.forEach(place => {
             createMarker(place);
-            if (place.geometry?.location) {
-              bounds.extend(place.geometry.location);
-            }
+            if (place.geometry?.location) bounds.extend(place.geometry.location);
           });
-
           mapInstance.fitBounds(bounds);
         }
       });
@@ -94,121 +90,75 @@ const ClinicMap = forwardRef<ClinicMapRef, ClinicMapProps>(({ locations, onLocat
   // Initialize Map
   useEffect(() => {
     if (isLoaded && mapRef.current && !mapInstance) {
-      const map = new google.maps.Map(mapRef.current, {
-        center: { lat: 37.7749, lng: -122.4194 }, // Default to SF
-        zoom: 13,
-        styles: [
-          // Dark/Premium Map Style
-          { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
-          { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
-          { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
-          {
-            featureType: "administrative.locality",
-            elementType: "labels.text.fill",
-            stylers: [{ color: "#d59563" }],
-          },
-          {
-            featureType: "poi",
-            elementType: "labels.text.fill",
-            stylers: [{ color: "#d59563" }],
-          },
-          {
-            featureType: "poi.park",
-            elementType: "geometry",
-            stylers: [{ color: "#263c3f" }],
-          },
-          {
-            featureType: "poi.park",
-            elementType: "labels.text.fill",
-            stylers: [{ color: "#6b9a76" }],
-          },
-          {
-            featureType: "road",
-            elementType: "geometry",
-            stylers: [{ color: "#38414e" }],
-          },
-          {
-            featureType: "road",
-            elementType: "geometry.stroke",
-            stylers: [{ color: "#212a37" }],
-          },
-          {
-            featureType: "road",
-            elementType: "labels.text.fill",
-            stylers: [{ color: "#9ca5b3" }],
-          },
-          {
-            featureType: "road.highway",
-            elementType: "geometry",
-            stylers: [{ color: "#746855" }],
-          },
-          {
-            featureType: "road.highway",
-            elementType: "geometry.stroke",
-            stylers: [{ color: "#1f2835" }],
-          },
-          {
-            featureType: "road.highway",
-            elementType: "labels.text.fill",
-            stylers: [{ color: "#f3d19c" }],
-          },
-          {
-            featureType: "water",
-            elementType: "geometry",
-            stylers: [{ color: "#17263c" }],
-          },
-          {
-            featureType: "water",
-            elementType: "labels.text.fill",
-            stylers: [{ color: "#515c6d" }],
-          },
-          {
-            featureType: "water",
-            elementType: "labels.text.stroke",
-            stylers: [{ color: "#17263c" }],
-          },
-        ],
-        disableDefaultUI: true,
-        zoomControl: true,
-      });
-      setMapInstance(map);
-      placesServiceRef.current = new google.maps.places.PlacesService(map);
+      try {
+        const map = new google.maps.Map(mapRef.current, {
+          center: { lat: 37.7749, lng: -122.4194 },
+          zoom: 13,
+          styles: [
+            { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
+            { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
+            { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
+            { featureType: "administrative.locality", elementType: "labels.text.fill", stylers: [{ color: "#d59563" }] },
+            { featureType: "poi", elementType: "labels.text.fill", stylers: [{ color: "#d59563" }] },
+            { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#263c3f" }] },
+            { featureType: "poi.park", elementType: "labels.text.fill", stylers: [{ color: "#6b9a76" }] },
+            { featureType: "road", elementType: "geometry", stylers: [{ color: "#38414e" }] },
+            { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#212a37" }] },
+            { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#9ca5b3" }] },
+            { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#746855" }] },
+            { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ color: "#1f2835" }] },
+            { featureType: "road.highway", elementType: "labels.text.fill", stylers: [{ color: "#f3d19c" }] },
+            { featureType: "water", elementType: "geometry", stylers: [{ color: "#17263c" }] },
+            { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#515c6d" }] },
+            { featureType: "water", elementType: "labels.text.stroke", stylers: [{ color: "#17263c" }] },
+          ],
+          disableDefaultUI: true,
+          zoomControl: true,
+        });
+        setMapInstance(map);
+        placesServiceRef.current = new google.maps.places.PlacesService(map);
+      } catch (e) {
+        console.error("Error initializing map:", e);
+        setMapError("Failed to initialize map. Please check API key permissions.");
+      }
     }
   }, [isLoaded, mapInstance]);
 
-  // Auto-search for nearby pharmacies and clinics on load
+  // Auto-search
   useEffect(() => {
     if (mapInstance && placesServiceRef.current) {
       const searchNearby = (type: string) => {
         const request: google.maps.places.PlaceSearchRequest = {
           location: mapInstance.getCenter()!,
-          radius: 5000, // 5km radius
+          radius: 5000,
           type: type
         };
 
         placesServiceRef.current?.nearbySearch(request, (results, status) => {
           if (status === google.maps.places.PlacesServiceStatus.OK && results) {
-            results.forEach(place => {
-              createMarker(place);
-            });
+            results.forEach(place => createMarker(place));
+          } else if (status === google.maps.places.PlacesServiceStatus.REQUEST_DENIED) {
+             console.error("Places API Request Denied. Check API Key permissions.");
+             setMapError("Places API Request Denied. Please enable 'Places API' in Google Cloud Console.");
           }
         });
       };
 
-      // Clear initial markers to avoid duplicates if re-running
       clearMarkers();
-
-      // Search for both types
       searchNearby('pharmacy');
       searchNearby('doctor');
       searchNearby('hospital');
     }
   }, [mapInstance]);
 
-  if (loadError) {
+  if (loadError || mapError) {
     return (
-      <GlassCard className="h-[400px] flex items-center justify-center text-red-500">
-        Error loading maps: {loadError.message}
+      <GlassCard className="h-[400px] flex flex-col items-center justify-center text-center p-6">
+        <div className="text-red-500 font-bold mb-2">Map Error</div>
+        <p className="text-slate-500 text-sm mb-4">{loadError?.message || mapError}</p>
+        <p className="text-xs text-slate-400 max-w-xs">
+          Ensure "Maps JavaScript API" and "Places API" are enabled in your Google Cloud Console and that your API key has the correct referrer restrictions.
+        </p>
       </GlassCard>
     );
   }
@@ -225,7 +175,6 @@ const ClinicMap = forwardRef<ClinicMapRef, ClinicMapProps>(({ locations, onLocat
     <GlassCard noPadding className="h-[400px] relative overflow-hidden">
       <div ref={mapRef} className="w-full h-full" />
       
-      {/* Legend Overlay */}
       <div className="absolute top-4 left-4 bg-white/90 dark:bg-slate-900/90 backdrop-blur p-3 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700">
         <div className="flex items-center gap-2 mb-1">
           {/* eslint-disable-next-line @next/next/no-img-element */}

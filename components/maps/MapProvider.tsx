@@ -1,8 +1,8 @@
 'use client';
 
-import React, { createContext, useContext, ReactNode } from 'react';
+import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react';
+import { Loader } from '@googlemaps/js-api-loader';
 
-// Define the context type
 interface MapContextType {
   isLoaded: boolean;
   loadError: Error | undefined;
@@ -17,10 +17,10 @@ interface MapProviderProps {
 }
 
 export default function MapProvider({ children }: MapProviderProps) {
-  const [isLoaded, setIsLoaded] = React.useState(false);
-  const [loadError, setLoadError] = React.useState<Error | undefined>(undefined);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [loadError, setLoadError] = useState<Error | undefined>(undefined);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_API_KEY;
     
     if (!apiKey) {
@@ -29,24 +29,19 @@ export default function MapProvider({ children }: MapProviderProps) {
       return;
     }
 
-    if (window.google && window.google.maps) {
+    const loader = new Loader({
+      apiKey: apiKey,
+      version: "weekly",
+      libraries: ["places", "geometry"], // Added geometry for distance calcs if needed
+    });
+
+    loader.importLibrary("maps").then(() => {
       setIsLoaded(true);
-      return;
-    }
+    }).catch((e) => {
+      console.error("Failed to load Google Maps:", e);
+      setLoadError(e);
+    });
 
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
-    script.async = true;
-    script.defer = true;
-    
-    script.onload = () => setIsLoaded(true);
-    script.onerror = (e) => setLoadError(new Error("Failed to load Google Maps script"));
-
-    document.head.appendChild(script);
-
-    return () => {
-      // Cleanup if needed
-    };
   }, []);
 
   return (
