@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
-		const { message, personaId = "default", conversationHistory = [] } = body;
+		const { message, personaId = "default", conversationHistory = [], images = [] } = body;
 
 		// Validate message
 		if (!message || typeof message !== "string" || !message.trim()) {
@@ -124,6 +124,7 @@ export async function POST(request: NextRequest) {
 					const streamGenerator = AIClient.streamChat(modelId, messages, {
 						temperature: persona.temperature ?? 0.7,
 						maxTokens: persona.maxTokens ?? 2048,
+						images: images,
 					});
 
 					for await (const chunk of streamGenerator) {

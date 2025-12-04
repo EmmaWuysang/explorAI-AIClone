@@ -5,6 +5,11 @@ interface ChatMessage {
   content: string;
 }
 
+interface ImageData {
+  mimeType: string;
+  data: string;
+}
+
 interface StreamChunk {
   content?: string;
   done?: boolean;
@@ -18,6 +23,7 @@ export class AIClient {
     options: {
       temperature?: number;
       maxTokens?: number;
+      images?: ImageData[];
     } = {}
   ): AsyncGenerator<StreamChunk, void, unknown> {
     const apiKey = process.env.GOOGLE_API_KEY;
@@ -63,26 +69,89 @@ export class AIClient {
         return;
       }
 
-      // Create chat session with history and system instruction
-      const chat = ai.chats.create({
-        model: modelId,
-        history: history,
-        config: {
-          systemInstruction: systemInstruction,
-          temperature: options.temperature ?? 0.7,
-          maxOutputTokens: options.maxTokens ?? 2048,
-        },
-      });
+      // Check if we have images to send
+      const hasImages = options.images && options.images.length > 0;
 
-      // Stream the response
-      const stream = await chat.sendMessageStream({
-        message: lastMessage.content,
-      });
+      if (hasImages) {
+        // For multimodal content, use generateContentStream directly
+        // Build content parts array with images and text
+        const contentParts: Array<
+          | { text: string }
+          | { inlineData: { mimeType: string; data: string } }
+        > = [];
 
-      for await (const chunk of stream) {
-        const text = chunk.text;
-        if (text) {
-          yield { content: text };
+        // Add images first
+        for (const image of options.images!) {
+          contentParts.push({
+            inlineData: {
+              mimeType: image.mimeType,
+              data: image.data,
+            },
+          });
+        }
+
+        // Add text message
+        contentParts.push({ text: lastMessage.content });
+
+        // Build the full contents array including history
+        const contents: Array<{
+          role: "user" | "model";
+          parts: Array<
+            | { text: string }
+            | { inlineData: { mimeType: string; data: string } }
+          >;
+        }> = [];
+
+        // Add history
+        for (const historyItem of history) {
+          contents.push(historyItem);
+        }
+
+        // Add current message with images
+        contents.push({
+          role: "user",
+          parts: contentParts,
+        });
+
+        // Stream multimodal response
+        const stream = await ai.models.generateContentStream({
+          model: modelId,
+          contents: contents,
+          config: {
+            systemInstruction: systemInstruction,
+            temperature: options.temperature ?? 0.7,
+            maxOutputTokens: options.maxTokens ?? 2048,
+          },
+        });
+
+        for await (const chunk of stream) {
+          const text = chunk.text;
+          if (text) {
+            yield { content: text };
+          }
+        }
+      } else {
+        // No images - use chat API for text-only
+        const chat = ai.chats.create({
+          model: modelId,
+          history: history,
+          config: {
+            systemInstruction: systemInstruction,
+            temperature: options.temperature ?? 0.7,
+            maxOutputTokens: options.maxTokens ?? 2048,
+          },
+        });
+
+        // Stream the response
+        const stream = await chat.sendMessageStream({
+          message: lastMessage.content,
+        });
+
+        for await (const chunk of stream) {
+          const text = chunk.text;
+          if (text) {
+            yield { content: text };
+          }
         }
       }
 

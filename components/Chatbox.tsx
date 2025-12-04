@@ -217,10 +217,25 @@ export default function Chatbox() {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
+	// Helper function to convert File to base64
+	const fileToBase64 = (file: File): Promise<string> => {
+		return new Promise((resolve, reject) => {
+			const reader = new FileReader();
+			reader.readAsDataURL(file);
+			reader.onload = () => {
+				const result = reader.result as string;
+				// Remove the data:image/...;base64, prefix
+				const base64 = result.split(',')[1];
+				resolve(base64);
+			};
+			reader.onerror = (error) => reject(error);
+		});
+	};
+
 	const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 
-		if (!input.trim() || isLoading) return;
+		if ((!input.trim() && imageAttachments.length === 0) || isLoading) return;
 
 		let conversationId = activeConversationId;
 		if (!conversationId) {
@@ -232,10 +247,33 @@ export default function Chatbox() {
 		setIsLoading(true);
 		setAgentStatus({ isThinking: true });
 
-		// Add user message
+		// Convert images to base64
+		const images: Array<{ mimeType: string; data: string }> = [];
+		for (const attachment of imageAttachments) {
+			try {
+				const base64Data = await fileToBase64(attachment.file);
+				images.push({
+					mimeType: attachment.file.type,
+					data: base64Data,
+				});
+				// Revoke the object URL to free memory
+				URL.revokeObjectURL(attachment.url);
+			} catch (error) {
+				console.error('Error converting image to base64:', error);
+			}
+		}
+
+		// Clear attachments after processing
+		setImageAttachments([]);
+
+		// Add user message (with note about images if any)
+		const messageContent = images.length > 0
+			? `${userMessageContent}${userMessageContent ? '\n' : ''}[${images.length} image${images.length > 1 ? 's' : ''} attached]`
+			: userMessageContent;
+
 		addMessage(conversationId, {
 			role: "user",
-			content: userMessageContent,
+			content: messageContent || '[Image attached]',
 		});
 
 		const streamId = `${Date.now()}-stream`;
@@ -259,9 +297,10 @@ export default function Chatbox() {
 					"Content-Type": "application/json",
 				},
 				body: JSON.stringify({
-					message: userMessageContent,
+					message: userMessageContent || "What's in this image?",
 					personaId: activePersonaId,
 					conversationHistory,
+					images: images.length > 0 ? images : undefined,
 				}),
 			});
 
