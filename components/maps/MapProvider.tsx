@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react';
-import { Loader } from '@googlemaps/js-api-loader';
+import { setOptions, importLibrary } from '@googlemaps/js-api-loader';
 
 interface MapContextType {
   isLoaded: boolean;
@@ -29,18 +29,23 @@ export default function MapProvider({ children }: MapProviderProps) {
       return;
     }
 
-    const loader = new Loader({
-      apiKey: apiKey,
-      version: "weekly",
-      libraries: ["places", "geometry"], // Added geometry for distance calcs if needed
-    });
+    try {
+      setOptions({
+        key: apiKey,
+        v: "weekly",
+        libraries: ["places", "geometry"],
+      });
 
-    (loader as any).importLibrary("maps").then(() => {
-      setIsLoaded(true);
-    }).catch((e: Error) => {
-      console.error("Failed to load Google Maps:", e);
-      setLoadError(e);
-    });
+      importLibrary("maps").then(() => {
+        setIsLoaded(true);
+      }).catch((e: Error) => {
+        console.error("Failed to load Google Maps:", e);
+        setLoadError(e);
+      });
+    } catch (e) {
+      console.error("Error setting up Google Maps:", e);
+      setLoadError(e as Error);
+    }
 
   }, []);
 
