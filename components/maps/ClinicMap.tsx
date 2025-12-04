@@ -34,40 +34,15 @@ const ClinicMap = forwardRef<ClinicMapRef, ClinicMapProps>(({ locations, onLocat
 
       placesServiceRef.current.findPlaceFromQuery(request, (results, status) => {
         if (status === google.maps.places.PlacesServiceStatus.OK && results && results.length > 0) {
-          // Clear existing markers
-          markersRef.current.forEach(marker => marker.setMap(null));
-          markersRef.current = [];
+          clearMarkers();
           
           const bounds = new google.maps.LatLngBounds();
 
           results.forEach(place => {
-            if (!place.geometry || !place.geometry.location) return;
-
-            const marker = new google.maps.Marker({
-              map: mapInstance,
-              position: place.geometry.location,
-              title: place.name,
-              animation: google.maps.Animation.DROP,
-            });
-
-            const locationData: Location = {
-              id: place.place_id || Math.random().toString(),
-              name: place.name || 'Unknown',
-              type: place.types?.includes('pharmacy') ? 'pharmacy' : 'clinic',
-              address: place.formatted_address || '',
-              lat: place.geometry.location.lat(),
-              lng: place.geometry.location.lng(),
-              rating: 0,
-              isOpen: true,
-              phone: ''
-            };
-
-            marker.addListener('click', () => {
-              if (onLocationSelect) onLocationSelect(locationData);
-            });
-
-            markersRef.current.push(marker);
-            bounds.extend(place.geometry.location);
+            createMarker(place);
+            if (place.geometry?.location) {
+              bounds.extend(place.geometry.location);
+            }
           });
 
           mapInstance.fitBounds(bounds);
@@ -75,6 +50,46 @@ const ClinicMap = forwardRef<ClinicMapRef, ClinicMapProps>(({ locations, onLocat
       });
     }
   }));
+
+  const clearMarkers = () => {
+    markersRef.current.forEach(marker => marker.setMap(null));
+    markersRef.current = [];
+  };
+
+  const createMarker = (place: google.maps.places.PlaceResult) => {
+    if (!mapInstance || !place.geometry || !place.geometry.location) return;
+
+    const isPharmacy = place.types?.includes('pharmacy');
+    const marker = new google.maps.Marker({
+      map: mapInstance,
+      position: place.geometry.location,
+      title: place.name,
+      animation: google.maps.Animation.DROP,
+      icon: {
+        url: isPharmacy
+          ? 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png' 
+          : 'https://maps.google.com/mapfiles/ms/icons/red-dot.png'
+      }
+    });
+
+    const locationData: Location = {
+      id: place.place_id || Math.random().toString(),
+      name: place.name || 'Unknown',
+      type: isPharmacy ? 'pharmacy' : 'clinic',
+      address: place.formatted_address || place.vicinity || '',
+      lat: place.geometry.location.lat(),
+      lng: place.geometry.location.lng(),
+      rating: place.rating || 0,
+      isOpen: place.opening_hours?.isOpen() || true,
+      phone: ''
+    };
+
+    marker.addListener('click', () => {
+      if (onLocationSelect) onLocationSelect(locationData);
+    });
+
+    markersRef.current.push(marker);
+  };
 
   // Initialize Map
   useEffect(() => {
@@ -161,39 +176,34 @@ const ClinicMap = forwardRef<ClinicMapRef, ClinicMapProps>(({ locations, onLocat
     }
   }, [isLoaded, mapInstance]);
 
-  // Update Markers (Initial Seed Data)
+  // Auto-search for nearby pharmacies and clinics on load
   useEffect(() => {
-    if (mapInstance && locations.length > 0) {
-      // Clear existing markers
-      markersRef.current.forEach(marker => marker.setMap(null));
-      markersRef.current = [];
+    if (mapInstance && placesServiceRef.current) {
+      const searchNearby = (type: string) => {
+        const request: google.maps.places.PlaceSearchRequest = {
+          location: mapInstance.getCenter()!,
+          radius: 5000, // 5km radius
+          type: type
+        };
 
-      const bounds = new google.maps.LatLngBounds();
-
-      locations.forEach(location => {
-        const marker = new google.maps.Marker({
-          position: { lat: location.lat, lng: location.lng },
-          map: mapInstance,
-          title: location.name,
-          animation: google.maps.Animation.DROP,
-          icon: {
-            url: location.type === 'pharmacy' 
-              ? 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png' 
-              : 'https://maps.google.com/mapfiles/ms/icons/red-dot.png'
+        placesServiceRef.current?.nearbySearch(request, (results, status) => {
+          if (status === google.maps.places.PlacesServiceStatus.OK && results) {
+            results.forEach(place => {
+              createMarker(place);
+            });
           }
         });
+      };
 
-        marker.addListener('click', () => {
-          if (onLocationSelect) onLocationSelect(location);
-        });
+      // Clear initial markers to avoid duplicates if re-running
+      clearMarkers();
 
-        markersRef.current.push(marker);
-        bounds.extend(marker.getPosition()!);
-      });
-
-      mapInstance.fitBounds(bounds);
+      // Search for both types
+      searchNearby('pharmacy');
+      searchNearby('doctor');
+      searchNearby('hospital');
     }
-  }, [mapInstance, locations, onLocationSelect]);
+  }, [mapInstance]);
 
   if (loadError) {
     return (
