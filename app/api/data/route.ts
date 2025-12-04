@@ -26,5 +26,13 @@ export async function GET(request: Request) {
         return NextResponse.json({ user, prescriptions });
     }
 
-    return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
+    // Inventory
+    if (type === 'inventory') {
+        const search = searchParams.get('search') || undefined;
+        const category = searchParams.get('category') || undefined;
+        const inventory = db.getInventory(search, category);
+        return NextResponse.json(inventory);
+    }
+
+    return NextResponse.json({ error: 'Invalid type' }, { status: 400 });
 }

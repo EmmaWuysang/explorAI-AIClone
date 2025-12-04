@@ -242,7 +242,6 @@ class MockDatabase {
     private users: User[] = [...USERS];
     private locations: Location[] = [...LOCATIONS];
     private medications: Medication[] = [...MEDICATIONS];
-    private medications: Medication[] = [...MEDICATIONS];
     private prescriptions: Prescription[] = [...PRESCRIPTIONS];
     private inventory: import('@/lib/types').InventoryItem[] = [...INVENTORY];
 
