@@ -81,26 +81,40 @@ export default function DoctorDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Patient List */}
-                           <img src={patient.avatarUrl} alt={patient.name} className="w-full h-full object-cover" />
-                        </div>
-                        <span className="font-medium text-slate-900 dark:text-white">{patient.name}</span>
+        <div className="lg:col-span-2 space-y-6">
+          <GlassCard>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">My Patients</h3>
+              <div className="relative">
+                <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search patients..."
+                  className="pl-10 pr-4 py-2 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm w-48"
+                />
+              </div>
+            </div>
+            <div className="space-y-4">
+              {patients.map((patient) => (
+                <div key={patient.id} className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 hover:bg-white dark:hover:bg-slate-800 transition-all duration-300 border border-transparent hover:border-blue-100 dark:hover:border-blue-900/30 group cursor-pointer" onClick={() => handlePatientClick(patient)}>
+                  <div className="flex items-center gap-4">
+                    <div className="relative">
+                      <div className="w-12 h-12 rounded-full bg-slate-200 overflow-hidden">
+                        <img src={patient.avatarUrl} alt={patient.name} className="w-full h-full object-cover" />
                       </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="px-2.5 py-1 rounded-full text-xs font-medium border bg-green-50 text-green-700 border-green-200">
-                        Stable
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-slate-500 text-sm">Oct 24, 2023</td>
-                    <td className="px-6 py-4 text-right">
-                      <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100">
-                        <MoreHorizontal size={18} />
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-slate-900 dark:text-white group-hover:text-blue-600 transition-colors">{patient.name}</h4>
+                      <p className="text-sm text-slate-500">Last visit: 2 days ago</p>
+                    </div>
+                  </div>
+                  <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                    View Profile
+                  </Button>
+                </div>
+              ))}
+            </div>
           </GlassCard>
         </div>
 
