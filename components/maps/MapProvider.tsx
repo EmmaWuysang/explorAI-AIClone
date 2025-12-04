@@ -35,7 +35,7 @@ export default function MapProvider({ children }: MapProviderProps) {
       libraries: ["places", "geometry"], // Added geometry for distance calcs if needed
     });
 
-    loader.load().then(() => {
+    (loader as any).importLibrary("maps").then(() => {
       setIsLoaded(true);
     }).catch((e: Error) => {
       console.error("Failed to load Google Maps:", e);
