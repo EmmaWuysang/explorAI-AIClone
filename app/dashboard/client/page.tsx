@@ -46,7 +46,6 @@ export default function ClientDashboard() {
     }
   };
 
-  return (
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
 
   const handleLocationSelect = (location: Location) => {
