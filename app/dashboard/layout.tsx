@@ -108,17 +108,7 @@ export default function DashboardLayout({
 
         <div className="flex-1 overflow-auto p-4 md:p-8 scroll-smooth">
           <div className="max-w-7xl mx-auto w-full">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={pathname}
-                initial={{ opacity: 0, y: 10, scale: 0.98 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -10, scale: 0.98 }}
-                transition={{ duration: 0.4, ease: [0.19, 1, 0.22, 1] }}
-              >
-                {children}
-              </motion.div>
-            </AnimatePresence>
+            {children}
           </div>
         </div>
       </main>

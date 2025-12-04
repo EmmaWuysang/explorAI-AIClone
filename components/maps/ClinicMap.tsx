@@ -178,8 +178,8 @@ const ClinicMap = forwardRef<ClinicMapRef, ClinicMapProps>(({ locations, onLocat
           animation: google.maps.Animation.DROP,
           icon: {
             url: location.type === 'pharmacy' 
-              ? 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png' 
-              : 'http://maps.google.com/mapfiles/ms/icons/red-dot.png'
+              ? 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png' 
+              : 'https://maps.google.com/mapfiles/ms/icons/red-dot.png'
           }
         });
 
@@ -219,12 +219,12 @@ const ClinicMap = forwardRef<ClinicMapRef, ClinicMapProps>(({ locations, onLocat
       <div className="absolute top-4 left-4 bg-white/90 dark:bg-slate-900/90 backdrop-blur p-3 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700">
         <div className="flex items-center gap-2 mb-1">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="http://maps.google.com/mapfiles/ms/icons/blue-dot.png" className="w-4 h-4" alt="Pharmacy" />
+          <img src="https://maps.google.com/mapfiles/ms/icons/blue-dot.png" className="w-4 h-4" alt="Pharmacy" />
           <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Pharmacy</span>
         </div>
         <div className="flex items-center gap-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="http://maps.google.com/mapfiles/ms/icons/red-dot.png" className="w-4 h-4" alt="Clinic" />
+          <img src="https://maps.google.com/mapfiles/ms/icons/red-dot.png" className="w-4 h-4" alt="Clinic" />
           <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Clinic</span>
         </div>
       </div>
