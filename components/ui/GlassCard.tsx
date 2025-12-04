@@ -49,7 +49,7 @@ export default function GlassCard({
       {/* Noise Texture Overlay for Premium Feel */}
       {/* Noise Texture Removed for Cleaner Look */}
       
-      <div className="relative z-10">
+      <div className="relative z-10 h-full w-full">
         {children}
       </div>
     </motion.div>
