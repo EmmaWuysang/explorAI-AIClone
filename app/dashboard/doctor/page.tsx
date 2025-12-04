@@ -81,40 +81,6 @@ export default function DoctorDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Patient List */}
-        <div className="lg:col-span-2">
-          <GlassCard noPadding className="overflow-hidden">
-            <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Recent Patients</h3>
-              <div className="relative">
-                <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input 
-                  type="text" 
-                  placeholder="Search patients..." 
-                  className="pl-10 pr-4 py-2 rounded-lg bg-slate-50 dark:bg-slate-800 border-none text-sm focus:ring-2 focus:ring-blue-500 w-64"
-                />
-              </div>
-            </div>
-            
-            <table className="w-full text-left">
-              <thead className="bg-slate-50/50 dark:bg-slate-800/50">
-                <tr>
-                  <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Patient</th>
-                  <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Last Visit</th>
-                  <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {patients.map((patient, idx) => (
-                  <tr 
-                    key={idx} 
-                    onClick={() => handlePatientClick(patient)}
-                    className="group hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
-                  >
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center overflow-hidden">
-                           {/* eslint-disable-next-line @next/next/no-img-element */}
                            <img src={patient.avatarUrl} alt={patient.name} className="w-full h-full object-cover" />
                         </div>
                         <span className="font-medium text-slate-900 dark:text-white">{patient.name}</span>
