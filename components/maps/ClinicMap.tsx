@@ -51,7 +51,12 @@ const ClinicMap = forwardRef<ClinicMapRef, ClinicMapProps>(({ locations, onLocat
 
   const clearMarkers = () => {
     markersRef.current.forEach(marker => {
-      marker.map = null;
+      if ('setMap' in marker && typeof (marker as any).setMap === 'function') {
+        (marker as google.maps.Marker).setMap(null);
+      } else {
+        // AdvancedMarkerElement
+        (marker as any).map = null;
+      }
     });
     markersRef.current = [];
   };
