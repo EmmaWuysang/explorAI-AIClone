@@ -73,7 +73,7 @@ export default function ClientDashboard() {
             <div className="flex items-center justify-between mb-8">
               <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <Clock className="text-blue-500" />
-                Today's Schedule
+                Today&apos;s Schedule
               </h3>
               <Button variant="ghost" size="sm">View Calendar</Button>
             </div>

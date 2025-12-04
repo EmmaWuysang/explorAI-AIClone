@@ -498,6 +498,7 @@ export default function Chatbox() {
 						<div className="flex gap-2 mb-3 flex-wrap">
 							{imageAttachments.map((img) => (
 								<div key={img.id} className="relative group">
+									{/* eslint-disable-next-line @next/next/no-img-element */}
 									<img
 										src={img.url}
 										alt="Attachment"
