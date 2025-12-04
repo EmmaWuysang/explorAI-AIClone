@@ -110,10 +110,29 @@ const ClinicMap = forwardRef<ClinicMapRef, ClinicMapProps>(({ locations, onLocat
           // Use importLibrary to safely load the Map and Places classes
           const { Map } = await google.maps.importLibrary("maps") as google.maps.MapsLibrary;
           const { PlacesService } = await google.maps.importLibrary("places") as google.maps.PlacesLibrary;
+          const { AdvancedMarkerElement } = await google.maps.importLibrary("marker") as google.maps.MarkerLibrary;
+
+          // Default center (SF)
+          let center = { lat: 37.7749, lng: -122.4194 };
+
+          // Try to get user location
+          if (navigator.geolocation) {
+            try {
+              const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(resolve, reject);
+              });
+              center = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+              };
+            } catch (e) {
+              console.log("Geolocation denied or failed, using default center");
+            }
+          }
 
           const map = new Map(mapRef.current, {
-            center: { lat: 37.7749, lng: -122.4194 },
-            zoom: 13,
+            center: center,
+            zoom: 14, // Zoom in a bit more for user location
             mapId: "DEMO_MAP_ID", // Required for AdvancedMarkerElement
             // styles: [] - Removed because mapId takes precedence for styling
             disableDefaultUI: true,
@@ -121,6 +140,20 @@ const ClinicMap = forwardRef<ClinicMapRef, ClinicMapProps>(({ locations, onLocat
           });
           setMapInstance(map);
           placesServiceRef.current = new PlacesService(map);
+
+          // Add user location marker if we have their location
+          if (navigator.geolocation) {
+             const userIcon = document.createElement('div');
+             userIcon.innerHTML = '<div style="background-color: #4285F4; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.3);"></div>';
+             
+             new AdvancedMarkerElement({
+               map,
+               position: center,
+               content: userIcon,
+               title: "You are here"
+             });
+          }
+
         } catch (e) {
           console.error("Error initializing map:", e);
           setMapError("Failed to initialize map. Please check API key permissions.");
