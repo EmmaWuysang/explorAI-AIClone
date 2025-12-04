@@ -83,12 +83,28 @@ const ClinicMap = forwardRef<ClinicMapRef, ClinicMapProps>(({ locations, onLocat
       content: iconImg,
     });
 
+    // Safe helper to get isOpen status
+    const getIsOpen = (p: any) => {
+      try {
+        if (typeof p.isOpen === 'function') {
+          return p.isOpen();
+        }
+        if (p.regularOpeningHours && typeof p.regularOpeningHours.isOpen === 'function') {
+          return p.regularOpeningHours.isOpen();
+        }
+        return undefined;
+      } catch (e) {
+        console.warn("Error checking isOpen status:", e);
+        return undefined;
+      }
+    };
+
     marker.addListener('click', async () => {
       if (onLocationSelect) {
         try {
           // Fetch additional details
           await place.fetchFields({
-            fields: ['nationalPhoneNumber', 'websiteURI', 'rating', 'userRatingCount']
+            fields: ['nationalPhoneNumber', 'websiteURI', 'rating', 'userRatingCount', 'regularOpeningHours']
           });
 
           const locationData: Location = {
@@ -99,7 +115,7 @@ const ClinicMap = forwardRef<ClinicMapRef, ClinicMapProps>(({ locations, onLocat
             lat: place.location.lat(),
             lng: place.location.lng(),
             rating: place.rating,
-            isOpen: place.isOpen ? place.isOpen() : (place.regularOpeningHours && 'isOpen' in place.regularOpeningHours && typeof place.regularOpeningHours.isOpen === 'function' ? place.regularOpeningHours.isOpen() : undefined),
+            isOpen: getIsOpen(place),
             phone: place.nationalPhoneNumber,
             website: place.websiteURI
           };
@@ -116,7 +132,7 @@ const ClinicMap = forwardRef<ClinicMapRef, ClinicMapProps>(({ locations, onLocat
             lat: place.location.lat(),
             lng: place.location.lng(),
             rating: place.rating,
-            isOpen: place.isOpen ? place.isOpen() : undefined,
+            isOpen: getIsOpen(place),
             phone: ''
           };
           onLocationSelect(locationData);
