@@ -12,6 +12,27 @@ export default function DoctorDashboard() {
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
   const [patientDetails, setPatientDetails] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [inventory, setInventory] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  React.useEffect(() => {
+    const fetchInventory = async () => {
+      try {
+        const res = await fetch(`/api/data?type=inventory${searchQuery ? `&search=${searchQuery}` : ''}`);
+        const data = await res.json();
+        setInventory(data);
+      } catch (error) {
+        console.error("Failed to fetch inventory", error);
+      }
+    };
+    
+    // Debounce search
+    const timeoutId = setTimeout(() => {
+      fetchInventory();
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
 
   const handlePatientClick = async (patient: any) => {
     setSelectedPatient(patient);
