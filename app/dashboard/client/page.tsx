@@ -1,13 +1,41 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import GlassCard from '@/components/ui/GlassCard';
 import Button from '@/components/ui/Button';
 import StatCard from '@/components/ui/StatCard';
-import { Plus, Check, Clock, Pill, Activity, Calendar } from 'lucide-react';
+import { Plus, Check, Clock, Pill, Activity, MapPin } from 'lucide-react';
+import ClinicMap from '@/components/maps/ClinicMap';
+import MapProvider from '@/components/maps/MapProvider';
+import { Location, Prescription } from '@/lib/db/mock-db';
 
 export default function ClientDashboard() {
   const timeOfDay = new Date().getHours() < 12 ? 'Good morning' : new Date().getHours() < 18 ? 'Good afternoon' : 'Good evening';
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch Locations
+        const locRes = await fetch('/api/data?type=locations&lat=37.7749&lng=-122.4194');
+        const locData = await locRes.json();
+        setLocations(locData);
+
+        // Fetch Prescriptions (Mock User ID 'u1')
+        const rxRes = await fetch('/api/data?type=prescriptions&userId=u1');
+        const rxData = await rxRes.json();
+        setPrescriptions(rxData);
+      } catch (error) {
+        console.error("Failed to fetch data", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   return (
     <div className="space-y-8">
@@ -45,7 +73,7 @@ export default function ClientDashboard() {
               {/* Timeline Line */}
               <div className="absolute left-8 top-4 bottom-4 w-0.5 bg-slate-100 dark:bg-slate-800" />
 
-              {/* Timeline Items */}
+              {/* Timeline Items (Mixed Mock + Real Data could go here, using static for now for visual consistency) */}
               {[
                 { time: '8:00 AM', name: 'Amoxicillin', dose: '500mg', status: 'upcoming', type: 'pill' },
                 { time: '9:00 AM', name: 'Vitamin D', dose: '1000IU', status: 'taken', type: 'capsule' },
@@ -99,6 +127,17 @@ export default function ClientDashboard() {
               ))}
             </div>
           </GlassCard>
+
+          {/* Map Section */}
+          <div className="space-y-4">
+             <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <MapPin className="text-blue-500" />
+                Nearby Care
+              </h3>
+            <MapProvider>
+              <ClinicMap locations={locations} />
+            </MapProvider>
+          </div>
         </div>
 
         {/* Sidebar Stats */}
@@ -125,17 +164,19 @@ export default function ClientDashboard() {
           <GlassCard>
             <h3 className="text-lg font-bold mb-4 text-slate-900 dark:text-white">Active Meds</h3>
             <div className="space-y-3">
-              {['Amoxicillin', 'Lisinopril', 'Vitamin D'].map((med, i) => (
+              {prescriptions.length > 0 ? prescriptions.map((rx: any, i) => (
                 <div key={i} className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer group">
                   <div className="flex items-center gap-3">
                     <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                    <span className="font-medium text-slate-700 dark:text-slate-200">{med}</span>
+                    <span className="font-medium text-slate-700 dark:text-slate-200">{rx.medication?.name}</span>
                   </div>
                   <div className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-400">
                     →
                   </div>
                 </div>
-              ))}
+              )) : (
+                <p className="text-slate-500 text-sm">No active medications.</p>
+              )}
             </div>
           </GlassCard>
         </div>
