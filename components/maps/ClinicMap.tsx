@@ -61,8 +61,8 @@ const ClinicMap = forwardRef<ClinicMapRef, ClinicMapProps>(({ locations, onLocat
     markersRef.current = [];
   };
 
-  const createMarker = async (place: google.maps.places.PlaceResult) => {
-    if (!mapInstance || !place.geometry || !place.geometry.location) return;
+  const createMarker = async (place: any) => {
+    if (!mapInstance || !place.location) return;
 
     const { AdvancedMarkerElement } = await google.maps.importLibrary("marker") as google.maps.MarkerLibrary;
 
@@ -78,25 +78,50 @@ const ClinicMap = forwardRef<ClinicMapRef, ClinicMapProps>(({ locations, onLocat
 
     const marker = new AdvancedMarkerElement({
       map: mapInstance,
-      position: place.geometry.location,
-      title: place.name,
+      position: place.location,
+      title: place.displayName,
       content: iconImg,
     });
 
-    const locationData: Location = {
-      id: place.place_id || Math.random().toString(),
-      name: place.name || 'Unknown',
-      type: isPharmacy ? 'pharmacy' : 'clinic',
-      address: place.formatted_address || place.vicinity || '',
-      lat: place.geometry.location.lat(),
-      lng: place.geometry.location.lng(),
-      rating: place.rating || 0,
-      isOpen: place.opening_hours?.isOpen() || true,
-      phone: ''
-    };
+    marker.addListener('click', async () => {
+      if (onLocationSelect) {
+        try {
+          // Fetch additional details
+          await place.fetchFields({
+            fields: ['nationalPhoneNumber', 'websiteURI', 'rating', 'userRatingCount']
+          });
 
-    marker.addListener('click', () => {
-      if (onLocationSelect) onLocationSelect(locationData);
+          const locationData: Location = {
+            id: place.id,
+            name: place.displayName,
+            type: isPharmacy ? 'pharmacy' : 'clinic',
+            address: place.formattedAddress,
+            lat: place.location.lat(),
+            lng: place.location.lng(),
+            rating: place.rating,
+            isOpen: place.regularOpeningHours?.isOpen(),
+            phone: place.nationalPhoneNumber,
+            website: place.websiteURI
+          };
+          
+          onLocationSelect(locationData);
+        } catch (error) {
+          console.error("Error fetching place details:", error);
+          // Fallback with available data
+          const locationData: Location = {
+            id: place.id,
+            name: place.displayName,
+            type: isPharmacy ? 'pharmacy' : 'clinic',
+            address: place.formattedAddress,
+            lat: place.location.lat(),
+            lng: place.location.lng(),
+            rating: place.rating,
+            isOpen: place.regularOpeningHours?.isOpen(),
+            phone: ''
+          };
+          onLocationSelect(locationData);
+        }
+      }
     });
 
     markersRef.current.push(marker as unknown as google.maps.Marker); // Type cast for compatibility with ref
@@ -191,18 +216,8 @@ const ClinicMap = forwardRef<ClinicMapRef, ClinicMapProps>(({ locations, onLocat
 
           if (places) {
             places.forEach((place: any) => {
-              // Convert new Place object to compatible format for createMarker
-              const placeResult: any = {
-                name: place.displayName,
-                geometry: { location: place.location },
-                formatted_address: place.formattedAddress,
-                place_id: place.id,
-                types: place.types,
-                rating: place.rating,
-                opening_hours: { isOpen: () => place.regularOpeningHours?.isOpen },
-                vicinity: place.formattedAddress // Fallback
-              };
-              createMarker(placeResult);
+              // Pass the Place instance directly to createMarker
+              createMarker(place);
             });
           }
         } catch (e) {
