@@ -3,12 +3,13 @@
 import React from 'react';
 import { motion, HTMLMotionProps } from 'framer-motion';
 
-interface ButtonProps extends HTMLMotionProps<"button"> {
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'glass';
   size?: 'sm' | 'md' | 'lg';
   isLoading?: boolean;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
+  children: React.ReactNode;
 }
 
 export default function Button({
