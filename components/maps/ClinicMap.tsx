@@ -24,8 +24,10 @@ const ClinicMap = forwardRef<ClinicMapRef, ClinicMapProps>(({ locations, onLocat
 
   // Expose search method
   useImperativeHandle(ref, () => ({
-    search: (query: string) => {
+    search: async (query: string) => {
       if (!mapInstance || !placesServiceRef.current) return;
+
+      const { LatLngBounds } = await google.maps.importLibrary("core") as google.maps.CoreLibrary;
 
       const request = {
         query: query,
@@ -36,7 +38,7 @@ const ClinicMap = forwardRef<ClinicMapRef, ClinicMapProps>(({ locations, onLocat
       placesServiceRef.current.findPlaceFromQuery(request, (results, status) => {
         if (status === google.maps.places.PlacesServiceStatus.OK && results && results.length > 0) {
           clearMarkers();
-          const bounds = new google.maps.LatLngBounds();
+          const bounds = new LatLngBounds();
           results.forEach(place => {
             createMarker(place);
             if (place.geometry?.location) bounds.extend(place.geometry.location);
@@ -52,11 +54,13 @@ const ClinicMap = forwardRef<ClinicMapRef, ClinicMapProps>(({ locations, onLocat
     markersRef.current = [];
   };
 
-  const createMarker = (place: google.maps.places.PlaceResult) => {
+  const createMarker = async (place: google.maps.places.PlaceResult) => {
     if (!mapInstance || !place.geometry || !place.geometry.location) return;
 
+    const { Marker } = await google.maps.importLibrary("marker") as google.maps.MarkerLibrary;
+
     const isPharmacy = place.types?.includes('pharmacy');
-    const marker = new google.maps.Marker({
+    const marker = new Marker({
       map: mapInstance,
       position: place.geometry.location,
       title: place.name,
@@ -89,39 +93,47 @@ const ClinicMap = forwardRef<ClinicMapRef, ClinicMapProps>(({ locations, onLocat
 
   // Initialize Map
   useEffect(() => {
-    if (isLoaded && mapRef.current && !mapInstance) {
-      try {
-        const map = new google.maps.Map(mapRef.current, {
-          center: { lat: 37.7749, lng: -122.4194 },
-          zoom: 13,
-          styles: [
-            { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
-            { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
-            { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
-            { featureType: "administrative.locality", elementType: "labels.text.fill", stylers: [{ color: "#d59563" }] },
-            { featureType: "poi", elementType: "labels.text.fill", stylers: [{ color: "#d59563" }] },
-            { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#263c3f" }] },
-            { featureType: "poi.park", elementType: "labels.text.fill", stylers: [{ color: "#6b9a76" }] },
-            { featureType: "road", elementType: "geometry", stylers: [{ color: "#38414e" }] },
-            { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#212a37" }] },
-            { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#9ca5b3" }] },
-            { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#746855" }] },
-            { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ color: "#1f2835" }] },
-            { featureType: "road.highway", elementType: "labels.text.fill", stylers: [{ color: "#f3d19c" }] },
-            { featureType: "water", elementType: "geometry", stylers: [{ color: "#17263c" }] },
-            { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#515c6d" }] },
-            { featureType: "water", elementType: "labels.text.stroke", stylers: [{ color: "#17263c" }] },
-          ],
-          disableDefaultUI: true,
-          zoomControl: true,
-        });
-        setMapInstance(map);
-        placesServiceRef.current = new google.maps.places.PlacesService(map);
-      } catch (e) {
-        console.error("Error initializing map:", e);
-        setMapError("Failed to initialize map. Please check API key permissions.");
+    const initMap = async () => {
+      if (isLoaded && mapRef.current && !mapInstance) {
+        try {
+          // Use importLibrary to safely load the Map and Places classes
+          const { Map } = await google.maps.importLibrary("maps") as google.maps.MapsLibrary;
+          const { PlacesService } = await google.maps.importLibrary("places") as google.maps.PlacesLibrary;
+
+          const map = new Map(mapRef.current, {
+            center: { lat: 37.7749, lng: -122.4194 },
+            zoom: 13,
+            styles: [
+              { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
+              { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
+              { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
+              { featureType: "administrative.locality", elementType: "labels.text.fill", stylers: [{ color: "#d59563" }] },
+              { featureType: "poi", elementType: "labels.text.fill", stylers: [{ color: "#d59563" }] },
+              { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#263c3f" }] },
+              { featureType: "poi.park", elementType: "labels.text.fill", stylers: [{ color: "#6b9a76" }] },
+              { featureType: "road", elementType: "geometry", stylers: [{ color: "#38414e" }] },
+              { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#212a37" }] },
+              { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#9ca5b3" }] },
+              { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#746855" }] },
+              { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ color: "#1f2835" }] },
+              { featureType: "road.highway", elementType: "labels.text.fill", stylers: [{ color: "#f3d19c" }] },
+              { featureType: "water", elementType: "geometry", stylers: [{ color: "#17263c" }] },
+              { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#515c6d" }] },
+              { featureType: "water", elementType: "labels.text.stroke", stylers: [{ color: "#17263c" }] },
+            ],
+            disableDefaultUI: true,
+            zoomControl: true,
+          });
+          setMapInstance(map);
+          placesServiceRef.current = new PlacesService(map);
+        } catch (e) {
+          console.error("Error initializing map:", e);
+          setMapError("Failed to initialize map. Please check API key permissions.");
+        }
       }
-    }
+    };
+
+    initMap();
   }, [isLoaded, mapInstance]);
 
   // Auto-search

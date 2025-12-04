@@ -30,18 +30,35 @@ export default function MapProvider({ children }: MapProviderProps) {
     }
 
     try {
-      setOptions({
-        key: apiKey,
-        v: "weekly",
-        libraries: ["places", "geometry"],
-      });
+      // Initialize loader options once
+      const bootstrap = async () => {
+        try {
+          // We can call importLibrary directly. setOptions is global and should be called once.
+          // However, calling it multiple times with the same options *should* be fine, but the warning says otherwise.
+          // Let's just use importLibrary which implicitly loads the API if not loaded.
+          // But we need to set the key.
+          
+          // Check if google.maps is already available to avoid re-initializing
+          if (window.google?.maps) {
+            setIsLoaded(true);
+            return;
+          }
 
-      importLibrary("maps").then(() => {
-        setIsLoaded(true);
-      }).catch((e: Error) => {
-        console.error("Failed to load Google Maps:", e);
-        setLoadError(e);
-      });
+          setOptions({
+            key: apiKey,
+            v: "weekly",
+            libraries: ["places", "geometry"],
+          });
+
+          await importLibrary("maps");
+          setIsLoaded(true);
+        } catch (e) {
+          console.error("Failed to load Google Maps:", e);
+          setLoadError(e as Error);
+        }
+      };
+
+      bootstrap();
     } catch (e) {
       console.error("Error setting up Google Maps:", e);
       setLoadError(e as Error);
