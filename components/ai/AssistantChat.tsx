@@ -2,13 +2,17 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Sparkles, Send, X, Minimize2, Maximize2 } from 'lucide-react';
+import Button from '@/components/ui/Button';
 
 export default function AssistantChat() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [messages, setMessages] = useState<{role: 'user' | 'assistant', content: string}[]>([
     { role: 'assistant', content: 'Hello! I am your medication assistant. How can I help you today?' }
   ]);
   const [input, setInput] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -17,7 +21,7 @@ export default function AssistantChat() {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, isTyping]);
 
   const handleSend = () => {
     if (!input.trim()) return;
@@ -28,43 +32,68 @@ export default function AssistantChat() {
     ];
     setMessages(newMessages);
     setInput('');
+    setIsTyping(true);
 
-    // Simulate AI response
+    // Simulate AI response with typing delay
     setTimeout(() => {
+      setIsTyping(false);
       setMessages(prev => [
         ...prev,
         { role: 'assistant', content: "I'm a demo assistant. I can't process real requests yet, but I'm here to help with your medication reminders!" }
       ]);
-    }, 1000);
+    }, 2000);
   };
 
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
-      <AnimatePresence>
-        {isOpen && (
+      <AnimatePresence mode="wait">
+        {isOpen ? (
           <motion.div
+            layoutId="chat-window"
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
+            animate={{ 
+              opacity: 1, 
+              scale: 1, 
+              y: 0,
+              width: isExpanded ? '600px' : '384px',
+              height: isExpanded ? '80vh' : '600px'
+            }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="w-96 glass-panel rounded-2xl mb-4 overflow-hidden flex flex-col h-[500px] shadow-2xl border border-white/40 dark:border-white/10"
+            transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+            className="glass-panel rounded-3xl overflow-hidden flex flex-col shadow-2xl border-white/40 dark:border-white/10"
           >
             {/* Header */}
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 flex justify-between items-center">
-              <h3 className="text-white font-bold flex items-center gap-2">
-                <span className="text-xl">✨</span> MedAssist AI
-              </h3>
-              <button 
-                onClick={() => setIsOpen(false)}
-                className="text-white/80 hover:text-white hover:bg-white/20 rounded-full p-1 transition-colors"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 flex justify-between items-center shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
+                  <Sparkles size={16} className="text-white" />
+                </div>
+                <div>
+                  <h3 className="text-white font-bold text-sm">MedAssist AI</h3>
+                  <p className="text-blue-100 text-xs flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    Online
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-1">
+                <button 
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className="p-1.5 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                >
+                  {isExpanded ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+                </button>
+                <button 
+                  onClick={() => setIsOpen(false)}
+                  className="p-1.5 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                >
+                  <X size={16} />
+                </button>
+              </div>
             </div>
             
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-white/40 dark:bg-gray-900/40">
+            <div className="flex-1 overflow-y-auto p-4 space-y-6 bg-slate-50/50 dark:bg-slate-900/50 scroll-smooth">
               {messages.map((msg, idx) => (
                 <motion.div 
                   key={idx} 
@@ -72,57 +101,64 @@ export default function AssistantChat() {
                   animate={{ opacity: 1, y: 0 }}
                   className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div className={`max-w-[85%] rounded-2xl px-4 py-3 shadow-sm ${
+                  <div className={`max-w-[85%] rounded-2xl px-5 py-3.5 shadow-sm ${
                     msg.role === 'user' 
                       ? 'bg-blue-600 text-white rounded-br-none' 
-                      : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-bl-none'
+                      : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-bl-none border border-slate-100 dark:border-slate-700'
                   }`}>
                     <p className="text-sm leading-relaxed">{msg.content}</p>
                   </div>
                 </motion.div>
               ))}
+              
+              {isTyping && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex justify-start"
+                >
+                  <div className="bg-white dark:bg-slate-800 rounded-2xl rounded-bl-none px-4 py-3 border border-slate-100 dark:border-slate-700 flex gap-1.5 items-center">
+                    <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                    <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                    <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" />
+                  </div>
+                </motion.div>
+              )}
               <div ref={messagesEndRef} />
             </div>
 
             {/* Input */}
-            <div className="p-4 bg-white/60 dark:bg-gray-800/60 border-t border-gray-200/50 dark:border-gray-700/50 backdrop-blur-md">
+            <div className="p-4 bg-white dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700">
               <div className="flex gap-2 relative">
                 <input
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                  placeholder="Ask about your meds..."
-                  className="flex-1 px-4 py-3 pr-12 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm shadow-inner"
+                  placeholder="Ask anything..."
+                  className="flex-1 px-4 py-3 pr-12 rounded-xl bg-slate-50 dark:bg-slate-900 border-none focus:ring-2 focus:ring-blue-500 text-sm transition-all"
                 />
-                <button 
+                <Button 
                   onClick={handleSend}
                   disabled={!input.trim()}
-                  className="absolute right-2 top-1.5 p-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  size="sm"
+                  className="absolute right-1.5 top-1.5 !p-2 rounded-lg aspect-square"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                  </svg>
-                </button>
+                  <Send size={16} />
+                </Button>
               </div>
             </div>
           </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Toggle Button */}
-      <AnimatePresence>
-        {!isOpen && (
+        ) : (
           <motion.button
-            initial={{ scale: 0, rotate: 180 }}
-            animate={{ scale: 1, rotate: 0 }}
-            exit={{ scale: 0, rotate: -180 }}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
+            layoutId="chat-window"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => setIsOpen(true)}
-            className="w-14 h-14 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full shadow-lg shadow-blue-600/30 flex items-center justify-center text-white border border-white/20"
+            className="group flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full shadow-lg shadow-blue-600/30 text-white border border-white/20"
           >
-            <span className="text-2xl">✨</span>
+            <Sparkles size={20} className="group-hover:rotate-12 transition-transform" />
+            <span className="font-medium">Ask AI</span>
           </motion.button>
         )}
       </AnimatePresence>

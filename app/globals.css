@@ -1,112 +1,144 @@
 @import "tailwindcss";
 
-/* MedAssist AI Design System - Professional Glassmorphism */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap');
+/* MedAssist AI Premium Design System */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
 :root {
-  /* Modern Medical Palette - Clean, Trustworthy, Professional */
-  --color-bg-primary: 240, 244, 248;     /* Soft Blue-Grey */
-  --color-bg-secondary: 255, 255, 255;   /* Pure White */
-  
-  /* Glassmorphism Variables */
-  --glass-bg: rgba(255, 255, 255, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.5);
-  --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
-  --glass-blur: 12px;
+  /* Premium Palette - Deep, Rich, Trustworthy */
+  --color-surface-1: 248, 250, 252;
+  /* Slate-50 - Main Background */
+  --color-surface-2: 255, 255, 255;
+  /* White - Cards/Panels */
+  --color-surface-3: 241, 245, 249;
+  /* Slate-100 - Secondary Background */
 
-  /* Brand Colors */
-  --color-brand-primary: 59, 130, 246;   /* Blue-500 */
-  --color-brand-secondary: 14, 165, 233; /* Sky-500 */
-  --color-brand-accent: 99, 102, 241;    /* Indigo-500 */
-  
-  /* Status Colors */
-  --color-success: 16, 185, 129;         /* Emerald-500 */
-  --color-warning: 245, 158, 11;         /* Amber-500 */
-  --color-error: 239, 68, 68;            /* Red-500 */
+  /* Brand Colors - Sophisticated Blue/Teal */
+  --color-brand-primary: 14, 165, 233;
+  /* Sky-500 */
+  --color-brand-dark: 2, 132, 199;
+  /* Sky-600 */
+  --color-brand-light: 186, 230, 253;
+  /* Sky-200 */
+  --color-accent-primary: 99, 102, 241;
+  /* Indigo-500 */
+  --color-accent-secondary: 168, 85, 247;
+  /* Purple-500 */
 
-  /* Text Colors */
-  --color-text-primary: 15, 23, 42;      /* Slate-900 */
-  --color-text-secondary: 71, 85, 105;   /* Slate-600 */
-  --color-text-tertiary: 148, 163, 184;  /* Slate-400 */
+  /* Semantic Colors */
+  --color-success: 16, 185, 129;
+  /* Emerald-500 */
+  --color-warning: 245, 158, 11;
+  /* Amber-500 */
+  --color-error: 239, 68, 68;
+  /* Red-500 */
+  --color-info: 59, 130, 246;
+  /* Blue-500 */
+
+  /* Text Colors - High Contrast & Readability */
+  --color-text-primary: 15, 23, 42;
+  /* Slate-900 */
+  --color-text-secondary: 71, 85, 105;
+  /* Slate-600 */
+  --color-text-tertiary: 148, 163, 184;
+  /* Slate-400 */
+  --color-text-on-brand: 255, 255, 255;
+
+  /* Glassmorphism - Refined */
+  --glass-bg: rgba(255, 255, 255, 0.65);
+  --glass-border: rgba(255, 255, 255, 0.4);
+  --glass-highlight: rgba(255, 255, 255, 0.8);
+  --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
+  --glass-blur: 16px;
+
+  /* Shadows - Layered Depth */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
+  --shadow-glow: 0 0 20px rgba(14, 165, 233, 0.15);
+
+  /* Animation Curves */
+  --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
+  --ease-in-out-circ: cubic-bezier(0.785, 0.135, 0.15, 0.86);
 }
 
-/* Dark Mode Overrides */
+/* Dark Mode Overrides - Deep Space/Midnight */
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-bg-primary: 15, 23, 42;      /* Slate-900 */
-    --color-bg-secondary: 30, 41, 59;    /* Slate-800 */
-    
-    --glass-bg: rgba(30, 41, 59, 0.7);
-    --glass-border: rgba(255, 255, 255, 0.1);
-    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    --color-surface-1: 15, 23, 42;
+    /* Slate-900 */
+    --color-surface-2: 30, 41, 59;
+    /* Slate-800 */
+    --color-surface-3: 2, 6, 23;
+    /* Slate-950 */
 
-    --color-text-primary: 248, 250, 252; /* Slate-50 */
-    --color-text-secondary: 203, 213, 225; /* Slate-300 */
-    --color-text-tertiary: 148, 163, 184; /* Slate-400 */
+    --glass-bg: rgba(30, 41, 59, 0.6);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-highlight: rgba(255, 255, 255, 0.1);
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+
+    --color-text-primary: 248, 250, 252;
+    /* Slate-50 */
+    --color-text-secondary: 203, 213, 225;
+    /* Slate-300 */
+    --color-text-tertiary: 100, 116, 139;
+    /* Slate-500 */
   }
 }
 
-/* Base Styles */
+/* Global Resets & Typography */
 body {
   margin: 0;
   padding: 0;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
   color: rgb(var(--color-text-primary));
-  background: rgb(var(--color-bg-primary));
-  background-image: 
-    radial-gradient(at 0% 0%, rgba(var(--color-brand-primary), 0.15) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, rgba(var(--color-brand-accent), 0.15) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, rgba(var(--color-brand-secondary), 0.15) 0px, transparent 50%),
-    radial-gradient(at 0% 100%, rgba(var(--color-success), 0.1) 0px, transparent 50%);
+  background: rgb(var(--color-surface-1));
+  /* Subtle mesh gradient background */
+  background-image:
+    radial-gradient(at 0% 0%, rgba(var(--color-brand-primary), 0.08) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(var(--color-accent-primary), 0.08) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(var(--color-brand-primary), 0.05) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, rgba(var(--color-accent-secondary), 0.05) 0px, transparent 50%);
   background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: 'Outfit', sans-serif;
+  letter-spacing: -0.02em;
 }
 
-/* Glassmorphism Utilities */
+/* Premium Utilities */
 .glass-panel {
   background: var(--glass-bg);
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
+  border-top: 1px solid var(--glass-highlight);
 }
 
-.glass-card {
-  background: var(--glass-bg);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow);
-  border-radius: 1rem;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+.text-balance {
+  text-wrap: balance;
 }
 
-.glass-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.15);
+.text-gradient-brand {
+  background: linear-gradient(135deg, rgb(var(--color-brand-primary)), rgb(var(--color-accent-primary)));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-.glass-button {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0));
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
-}
-
-.glass-button:hover {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05));
-  transform: translateY(-1px);
-}
-
-/* Custom Scrollbar */
+/* Custom Scrollbar - Minimalist */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -114,10 +146,27 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(156, 163, 175, 0.5);
-  border-radius: 4px;
+  background: rgba(148, 163, 184, 0.3);
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(156, 163, 175, 0.8);
+  background: rgba(148, 163, 184, 0.5);
+}
+
+/* Animation Utilities */
+.animate-enter {
+  animation: enter 0.4s var(--ease-out-expo) forwards;
+}
+
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

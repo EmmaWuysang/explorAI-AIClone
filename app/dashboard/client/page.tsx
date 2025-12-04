@@ -1,108 +1,143 @@
+'use client';
+
 import React from 'react';
+import GlassCard from '@/components/ui/GlassCard';
+import Button from '@/components/ui/Button';
+import StatCard from '@/components/ui/StatCard';
+import { Plus, Check, Clock, Pill, Activity, Calendar } from 'lucide-react';
 
 export default function ClientDashboard() {
+  const timeOfDay = new Date().getHours() < 12 ? 'Good morning' : new Date().getHours() < 18 ? 'Good afternoon' : 'Good evening';
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">My Health Dashboard</h2>
-        <button className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:shadow-lg hover:shadow-blue-500/25 transition-all font-medium">
-          + Add Medication
-        </button>
+    <div className="space-y-8">
+      {/* Welcome Section */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-4xl font-bold text-slate-900 dark:text-white tracking-tight mb-1">
+            {timeOfDay}, <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Alex</span>
+          </h2>
+          <p className="text-slate-500 dark:text-slate-400 text-lg">You're on a 12-day streak! Keep it up.</p>
+        </div>
+        <Button 
+          variant="primary" 
+          size="lg" 
+          leftIcon={<Plus size={20} />}
+          className="shadow-xl shadow-blue-500/20"
+        >
+          Add Medication
+        </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Today's Reminders */}
-        <div className="md:col-span-2 glass-card p-6">
-          <h3 className="text-xl font-semibold mb-6 text-gray-900 dark:text-white flex items-center gap-2">
-            <span className="w-2 h-6 bg-blue-500 rounded-full"></span>
-            Today&apos;s Reminders
-          </h3>
-          <div className="space-y-4">
-            {/* Reminder Item */}
-            <div className="p-4 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-white/60 dark:border-gray-700/50 flex items-center justify-between hover:bg-white/80 dark:hover:bg-gray-800 transition-colors group">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xl">
-                  💊
-                </div>
-                <div>
-                  <p className="font-bold text-gray-900 dark:text-white text-lg">Amoxicillin</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">500mg • Take with food</p>
-                </div>
-              </div>
-              <div className="text-right flex flex-col items-end gap-2">
-                <p className="text-lg font-bold text-blue-600 dark:text-blue-400">8:00 AM</p>
-                <button className="text-sm px-3 py-1 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors opacity-0 group-hover:opacity-100">
-                  Mark as Taken
-                </button>
-              </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Main Content - Timeline */}
+        <div className="lg:col-span-2 space-y-8">
+          <GlassCard className="min-h-[400px]">
+            <div className="flex items-center justify-between mb-8">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <Clock className="text-blue-500" />
+                Today's Schedule
+              </h3>
+              <Button variant="ghost" size="sm">View Calendar</Button>
             </div>
-            
-            <div className="p-4 rounded-xl bg-gray-50/50 dark:bg-gray-800/30 border border-gray-100 dark:border-gray-800 flex items-center justify-between opacity-60">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 flex items-center justify-center text-xl">
-                  ✓
+
+            <div className="space-y-6 relative">
+              {/* Timeline Line */}
+              <div className="absolute left-8 top-4 bottom-4 w-0.5 bg-slate-100 dark:bg-slate-800" />
+
+              {/* Timeline Items */}
+              {[
+                { time: '8:00 AM', name: 'Amoxicillin', dose: '500mg', status: 'upcoming', type: 'pill' },
+                { time: '9:00 AM', name: 'Vitamin D', dose: '1000IU', status: 'taken', type: 'capsule' },
+                { time: '8:00 PM', name: 'Lisinopril', dose: '10mg', status: 'future', type: 'tablet' },
+              ].map((item, idx) => (
+                <div key={idx} className="relative flex items-center gap-6 group">
+                  <div className={`
+                    w-16 text-right text-sm font-medium 
+                    ${item.status === 'taken' ? 'text-slate-400' : 'text-slate-900 dark:text-white'}
+                  `}>
+                    {item.time}
+                  </div>
+                  
+                  <div className={`
+                    relative z-10 w-4 h-4 rounded-full border-2 
+                    ${item.status === 'taken' ? 'bg-emerald-500 border-emerald-500' : 
+                      item.status === 'upcoming' ? 'bg-white border-blue-500 ring-4 ring-blue-500/20' : 
+                      'bg-slate-200 border-slate-300 dark:bg-slate-700 dark:border-slate-600'}
+                  `} />
+
+                  <div className={`
+                    flex-1 p-4 rounded-2xl border transition-all duration-300
+                    ${item.status === 'upcoming' 
+                      ? 'bg-white dark:bg-slate-800 border-blue-100 dark:border-blue-900/30 shadow-lg shadow-blue-500/5 scale-[1.02]' 
+                      : 'bg-slate-50 dark:bg-slate-800/50 border-transparent opacity-80'}
+                  `}>
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-4">
+                        <div className={`p-2.5 rounded-xl ${item.status === 'upcoming' ? 'bg-blue-100 text-blue-600' : 'bg-slate-200 text-slate-500'}`}>
+                          <Pill size={20} />
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-slate-900 dark:text-white">{item.name}</h4>
+                          <p className="text-sm text-slate-500">{item.dose} • {item.type}</p>
+                        </div>
+                      </div>
+                      
+                      {item.status === 'upcoming' && (
+                        <Button variant="primary" size="sm" className="rounded-full px-6">
+                          Take
+                        </Button>
+                      )}
+                      {item.status === 'taken' && (
+                        <span className="flex items-center gap-1 text-emerald-600 font-medium text-sm">
+                          <Check size={16} /> Taken
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-bold text-gray-900 dark:text-white text-lg line-through">Lisinopril</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">10mg</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="text-lg font-bold text-gray-500">9:00 AM</p>
-                <span className="text-sm text-green-600 font-medium bg-green-50 px-2 py-0.5 rounded">Taken</span>
-              </div>
+              ))}
             </div>
-          </div>
+          </GlassCard>
         </div>
 
-        {/* Quick Stats / Adherence */}
-        <div className="glass-card p-6 flex flex-col items-center justify-center text-center relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 z-0"></div>
-          <h3 className="text-xl font-semibold mb-6 text-gray-900 dark:text-white relative z-10">Weekly Adherence</h3>
+        {/* Sidebar Stats */}
+        <div className="space-y-6">
+          <StatCard 
+            label="Weekly Adherence" 
+            value="95%" 
+            trend={{ value: 5, isPositive: true }}
+            icon={<Activity size={24} />}
+            color="green"
+          />
           
-          <div className="relative w-40 h-40 flex items-center justify-center mb-4 z-10">
-            {/* Simple CSS Ring Chart Placeholder */}
-            <div className="w-full h-full rounded-full border-8 border-gray-100 dark:border-gray-700 absolute"></div>
-            <div className="w-full h-full rounded-full border-8 border-green-500 border-t-transparent border-l-transparent rotate-45 absolute"></div>
-            <div className="text-center">
-              <p className="text-5xl font-bold text-gray-900 dark:text-white">95%</p>
+          <GlassCard className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white border-none">
+            <h3 className="text-lg font-bold mb-2">Next Refill</h3>
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-indigo-100">Lisinopril</span>
+              <span className="bg-white/20 px-2 py-1 rounded text-xs font-medium">3 days left</span>
             </div>
-          </div>
-          <p className="text-green-600 font-medium relative z-10">Excellent!</p>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 relative z-10">You missed 1 dose this week</p>
-        </div>
-      </div>
+            <Button variant="glass" size="sm" className="w-full justify-center">
+              Order Refill
+            </Button>
+          </GlassCard>
 
-      {/* Active Medications */}
-      <div className="glass-card p-6">
-        <h3 className="text-xl font-semibold mb-6 text-gray-900 dark:text-white flex items-center gap-2">
-          <span className="w-2 h-6 bg-purple-500 rounded-full"></span>
-          Active Medications
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {/* Medication Card */}
-          <div className="p-5 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-white/60 dark:border-gray-700/50 hover:shadow-lg transition-all cursor-pointer group">
-            <div className="flex justify-between items-start mb-3">
-              <h4 className="font-bold text-lg text-gray-900 dark:text-white group-hover:text-blue-600 transition-colors">Amoxicillin</h4>
-              <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300">Active</span>
+          <GlassCard>
+            <h3 className="text-lg font-bold mb-4 text-slate-900 dark:text-white">Active Meds</h3>
+            <div className="space-y-3">
+              {['Amoxicillin', 'Lisinopril', 'Vitamin D'].map((med, i) => (
+                <div key={i} className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer group">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                    <span className="font-medium text-slate-700 dark:text-slate-200">{med}</span>
+                  </div>
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-400">
+                    →
+                  </div>
+                </div>
+              ))}
             </div>
-            <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">500mg • Capsule</p>
-            <div className="flex items-center justify-between text-xs text-gray-500">
-              <span>Refills: 1</span>
-              <span className="text-blue-600 group-hover:underline">Details →</span>
-            </div>
-          </div>
-           <div className="p-5 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-white/60 dark:border-gray-700/50 hover:shadow-lg transition-all cursor-pointer group">
-            <div className="flex justify-between items-start mb-3">
-              <h4 className="font-bold text-lg text-gray-900 dark:text-white group-hover:text-blue-600 transition-colors">Lisinopril</h4>
-              <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300">Active</span>
-            </div>
-            <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">10mg • Tablet</p>
-            <div className="flex items-center justify-between text-xs text-gray-500">
-              <span>Refills: 3</span>
-              <span className="text-blue-600 group-hover:underline">Details →</span>
-            </div>
-          </div>
+          </GlassCard>
         </div>
       </div>
     </div>

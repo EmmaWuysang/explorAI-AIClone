@@ -1,93 +1,99 @@
+'use client';
+
 import React from 'react';
+import GlassCard from '@/components/ui/GlassCard';
+import Button from '@/components/ui/Button';
+import StatCard from '@/components/ui/StatCard';
+import { Pill, CheckCircle, AlertTriangle, Package, ArrowRight } from 'lucide-react';
 
 export default function PharmacistDashboard() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Pharmacy Dashboard</h2>
+        <div>
+          <h2 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Pharmacy Dashboard</h2>
+          <p className="text-slate-500 dark:text-slate-400">Inventory and verification queue</p>
+        </div>
         <div className="flex gap-3">
-          <button className="px-5 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all font-medium shadow-sm">
-            Inventory
-          </button>
-          <button className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:shadow-lg hover:shadow-blue-500/25 transition-all font-medium">
-            Verify Prescription
-          </button>
+          <Button variant="secondary" leftIcon={<Package size={18} />}>Inventory</Button>
+          <Button variant="primary" leftIcon={<CheckCircle size={18} />}>Verify Batch</Button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Stats Cards */}
-        {[
-          { label: 'Pending Verification', value: '12', color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-900/20' },
-          { label: 'Ready for Pickup', value: '28', color: 'text-green-600', bg: 'bg-green-50 dark:bg-green-900/20' },
-          { label: 'Low Stock Items', value: '3', color: 'text-red-600', bg: 'bg-red-50 dark:bg-red-900/20' },
-          { label: 'Total Filled Today', value: '145', color: 'text-purple-600', bg: 'bg-purple-50 dark:bg-purple-900/20' },
-        ].map((stat, idx) => (
-          <div key={idx} className="glass-card p-6 flex flex-col justify-between hover:scale-105 transition-transform duration-200">
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{stat.label}</p>
-            <div className="flex items-end justify-between mt-4">
-              <p className={`text-4xl font-bold ${stat.color}`}>{stat.value}</p>
-              <div className={`w-10 h-10 rounded-full ${stat.bg} flex items-center justify-center`}>
-                <span className={`text-lg ${stat.color}`}>●</span>
-              </div>
-            </div>
-          </div>
-        ))}
+        <StatCard label="Pending" value="12" color="blue" icon={<Pill size={20} />} />
+        <StatCard label="Ready" value="28" color="green" icon={<CheckCircle size={20} />} />
+        <StatCard label="Low Stock" value="3" color="red" icon={<AlertTriangle size={20} />} />
+        <StatCard label="Filled Today" value="145" color="purple" icon={<Package size={20} />} />
       </div>
 
-      {/* Verification Queue */}
-      <div className="glass-card p-6">
-        <h3 className="text-xl font-semibold mb-6 text-gray-900 dark:text-white flex items-center gap-2">
-          <span className="w-2 h-6 bg-indigo-500 rounded-full"></span>
-          Verification Queue
-        </h3>
-        <div className="space-y-4">
-          <div className="p-5 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-white/60 dark:border-gray-700/50 hover:shadow-md transition-all group">
-            <div className="flex justify-between items-start">
-              <div className="flex gap-5">
-                <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-lg shadow-inner">
-                  Rx
-                </div>
-                <div>
-                  <h4 className="font-bold text-lg text-gray-900 dark:text-white">Prescription #RX-9823</h4>
-                  <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mt-1">
-                    <span>Alice Johnson</span>
-                    <span>•</span>
-                    <span>Dr. Smith</span>
-                  </div>
-                  <p className="text-sm font-semibold text-blue-600 dark:text-blue-400 mt-2 bg-blue-50 dark:bg-blue-900/20 px-3 py-1 rounded-lg inline-block">
-                    Amoxicillin 500mg - 30 Capsules
-                  </p>
-                </div>
-              </div>
-              <button className="px-5 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-500/20 transition-all opacity-0 group-hover:opacity-100 transform translate-x-4 group-hover:translate-x-0">
-                Review Order
-              </button>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Verification Queue */}
+        <div className="lg:col-span-2">
+          <GlassCard>
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white">Verification Queue</h3>
+              <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">12 Pending</span>
             </div>
-          </div>
-           <div className="p-5 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-white/60 dark:border-gray-700/50 hover:shadow-md transition-all group">
-            <div className="flex justify-between items-start">
-              <div className="flex gap-5">
-                <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-lg shadow-inner">
-                  Rx
-                </div>
-                <div>
-                  <h4 className="font-bold text-lg text-gray-900 dark:text-white">Prescription #RX-9824</h4>
-                  <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mt-1">
-                    <span>Bob Smith</span>
-                    <span>•</span>
-                    <span>Dr. Jones</span>
+
+            <div className="space-y-4">
+              {[1, 2].map((item) => (
+                <div key={item} className="p-5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 hover:shadow-lg hover:border-blue-200 dark:hover:border-blue-800 transition-all group">
+                  <div className="flex justify-between items-start">
+                    <div className="flex gap-5">
+                      <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 flex items-center justify-center font-bold text-xl">
+                        Rx
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="font-bold text-lg text-slate-900 dark:text-white">#RX-982{item}</h4>
+                          <span className="px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">New</span>
+                        </div>
+                        <p className="text-slate-500 text-sm mb-3">Alice Johnson • Dr. Smith</p>
+                        <div className="flex items-center gap-2">
+                          <span className="px-3 py-1 rounded-lg bg-blue-50 text-blue-700 text-sm font-medium border border-blue-100">
+                            Amoxicillin 500mg
+                          </span>
+                          <span className="text-slate-400 text-sm">30 Capsules</span>
+                        </div>
+                      </div>
+                    </div>
+                    <Button variant="primary" size="sm" className="opacity-0 group-hover:opacity-100 translate-x-4 group-hover:translate-x-0 transition-all" rightIcon={<ArrowRight size={16} />}>
+                      Review
+                    </Button>
                   </div>
-                  <p className="text-sm font-semibold text-blue-600 dark:text-blue-400 mt-2 bg-blue-50 dark:bg-blue-900/20 px-3 py-1 rounded-lg inline-block">
-                    Lipitor 20mg - 90 Tablets
-                  </p>
                 </div>
-              </div>
-              <button className="px-5 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-500/20 transition-all opacity-0 group-hover:opacity-100 transform translate-x-4 group-hover:translate-x-0">
-                Review Order
-              </button>
+              ))}
             </div>
-          </div>
+          </GlassCard>
+        </div>
+
+        {/* Inventory Alerts */}
+        <div>
+          <GlassCard className="h-full">
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Inventory Alerts</h3>
+            <div className="space-y-4">
+              {[
+                { name: 'Lipitor 20mg', stock: 15, status: 'Critical' },
+                { name: 'Metformin 500mg', stock: 45, status: 'Low' },
+                { name: 'Zoloft 50mg', stock: 20, status: 'Low' },
+              ].map((item, idx) => (
+                <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+                  <div>
+                    <p className="font-bold text-slate-900 dark:text-white">{item.name}</p>
+                    <p className="text-xs text-slate-500">{item.stock} units left</p>
+                  </div>
+                  <span className={`px-2 py-1 rounded text-xs font-bold ${
+                    item.status === 'Critical' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
+                  }`}>
+                    {item.status}
+                  </span>
+                </div>
+              ))}
+              
+              <Button variant="outline" className="w-full mt-4">View All Inventory</Button>
+            </div>
+          </GlassCard>
         </div>
       </div>
     </div>
