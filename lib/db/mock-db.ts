@@ -11,6 +11,7 @@ export interface Location {
     rating: number;
     isOpen: boolean;
     phone: string;
+    website?: string;
 }
 
 // Seed Data
