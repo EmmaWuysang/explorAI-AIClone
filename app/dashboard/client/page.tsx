@@ -47,6 +47,14 @@ export default function ClientDashboard() {
   };
 
   return (
+  const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
+
+  const handleLocationSelect = (location: Location) => {
+    setSelectedLocation(location);
+    // Optional: Scroll to details or show modal
+  };
+
+  return (
     <div className="space-y-8">
       {/* Welcome Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -163,9 +171,77 @@ export default function ClientDashboard() {
                   </div>
                 </div>
              </div>
-            <MapProvider>
-              <ClinicMap ref={mapRef} locations={locations} />
-            </MapProvider>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="md:col-span-2">
+                <MapProvider>
+                  <ClinicMap ref={mapRef} locations={locations} onLocationSelect={handleLocationSelect} />
+                </MapProvider>
+              </div>
+              
+              {/* Selected Location Details */}
+              <div className="md:col-span-1">
+                {selectedLocation ? (
+                  <GlassCard className="h-full flex flex-col">
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <h4 className="font-bold text-slate-900 dark:text-white text-lg leading-tight mb-1">{selectedLocation.name}</h4>
+                        <span className={`text-xs px-2 py-1 rounded-full ${selectedLocation.type === 'pharmacy' ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'}`}>
+                          {selectedLocation.type.charAt(0).toUpperCase() + selectedLocation.type.slice(1)}
+                        </span>
+                      </div>
+                      <div className="flex flex-col items-end">
+                        <div className="flex items-center gap-1 text-amber-500 font-bold">
+                          <span>★</span> {selectedLocation.rating || 'N/A'}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-3 text-sm text-slate-600 dark:text-slate-300 flex-1">
+                      <div className="flex gap-2">
+                        <MapPin size={16} className="shrink-0 mt-0.5 text-slate-400" />
+                        <p>{selectedLocation.address}</p>
+                      </div>
+                      
+                      {selectedLocation.isOpen !== undefined && (
+                        <div className="flex gap-2">
+                          <Clock size={16} className="shrink-0 mt-0.5 text-slate-400" />
+                          <p className={selectedLocation.isOpen ? "text-emerald-600 font-medium" : "text-red-500"}>
+                            {selectedLocation.isOpen ? "Open Now" : "Closed"}
+                          </p>
+                        </div>
+                      )}
+
+                      {selectedLocation.phone && (
+                        <div className="flex gap-2">
+                          <div className="shrink-0 mt-0.5 text-slate-400">📞</div>
+                          <a href={`tel:${selectedLocation.phone}`} className="hover:text-blue-500 transition-colors">{selectedLocation.phone}</a>
+                        </div>
+                      )}
+
+                      {selectedLocation.website && (
+                        <div className="flex gap-2">
+                          <div className="shrink-0 mt-0.5 text-slate-400">🌐</div>
+                          <a href={selectedLocation.website} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline truncate block">
+                            Visit Website
+                          </a>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                      <Button variant="primary" size="sm" className="w-full justify-center">
+                        Get Directions
+                      </Button>
+                    </div>
+                  </GlassCard>
+                ) : (
+                  <GlassCard className="h-full flex flex-col items-center justify-center text-center p-6 text-slate-400">
+                    <MapPin size={32} className="mb-2 opacity-50" />
+                    <p className="text-sm">Select a location on the map to see details</p>
+                  </GlassCard>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
