@@ -157,7 +157,7 @@ const ClinicMap = forwardRef<ClinicMapRef, ClinicMapProps>(({ locations, onLocat
         <div className="text-red-500 font-bold mb-2">Map Error</div>
         <p className="text-slate-500 text-sm mb-4">{loadError?.message || mapError}</p>
         <p className="text-xs text-slate-400 max-w-xs">
-          Ensure "Maps JavaScript API" and "Places API" are enabled in your Google Cloud Console and that your API key has the correct referrer restrictions.
+          Ensure &quot;Maps JavaScript API&quot; and &quot;Places API&quot; are enabled in your Google Cloud Console and that your API key has the correct referrer restrictions.
         </p>
       </GlassCard>
     );
