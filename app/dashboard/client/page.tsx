@@ -10,13 +10,23 @@ import MapProvider from '@/components/maps/MapProvider';
 import { Location } from '@/lib/db/mock-db';
 import { Prescription } from '@/lib/types';
 
+import { motion, AnimatePresence } from 'framer-motion';
+
 export default function ClientDashboard() {
   const timeOfDay = new Date().getHours() < 12 ? 'Good morning' : new Date().getHours() < 18 ? 'Good afternoon' : 'Good evening';
   const [locations, setLocations] = useState<Location[]>([]);
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [inventorySearchQuery, setInventorySearchQuery] = useState('');
+  const [inventory, setInventory] = useState<any[]>([]);
   const mapRef = useRef<ClinicMapRef>(null);
+
+  // Mock Active Meds
+  const activeMeds = [
+    { id: 'am1', name: 'Amoxicillin', dosage: '500mg', timeLeft: '2 hrs', progress: 75, pillsLeft: 12 },
+    { id: 'am2', name: 'Lisinopril', dosage: '10mg', timeLeft: '12 hrs', progress: 20, pillsLeft: 28 },
+  ];
 
   useEffect(() => {
     const fetchData = async () => {
@@ -30,6 +40,12 @@ export default function ClientDashboard() {
         const rxRes = await fetch('/api/data?type=prescriptions&userId=u1');
         const rxData = await rxRes.json();
         setPrescriptions(rxData);
+
+        // Fetch Inventory
+        const invRes = await fetch(`/api/data?type=inventory${inventorySearchQuery ? `&search=${inventorySearchQuery}` : ''}`);
+        const invData = await invRes.json();
+        setInventory(invData);
+
       } catch (error) {
         console.error("Failed to fetch data", error);
       } finally {
@@ -38,7 +54,7 @@ export default function ClientDashboard() {
     };
 
     fetchData();
-  }, []);
+  }, [inventorySearchQuery]);
 
   const handleSearch = () => {
     if (mapRef.current && searchQuery) {
