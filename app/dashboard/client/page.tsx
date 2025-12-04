@@ -172,7 +172,6 @@ export default function ClientDashboard() {
               <ClinicMap 
                 ref={mapRef}
                 locations={locations}
-                userLocation={{ lat: 37.7749, lng: -122.4194 }} 
                 onLocationSelect={handleLocationSelect}
               />
             </MapProvider>
