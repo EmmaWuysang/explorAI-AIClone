@@ -7,7 +7,8 @@ import StatCard from '@/components/ui/StatCard';
 import { Plus, Check, Clock, Pill, Activity, MapPin, Search } from 'lucide-react';
 import ClinicMap, { ClinicMapRef } from '@/components/maps/ClinicMap';
 import MapProvider from '@/components/maps/MapProvider';
-import { Location, Prescription } from '@/lib/db/mock-db';
+import { Location } from '@/lib/db/mock-db';
+import { Prescription } from '@/lib/types';
 
 export default function ClientDashboard() {
   const timeOfDay = new Date().getHours() < 12 ? 'Good morning' : new Date().getHours() < 18 ? 'Good afternoon' : 'Good evening';
@@ -53,7 +54,7 @@ export default function ClientDashboard() {
           <h2 className="text-4xl font-bold text-slate-900 dark:text-white tracking-tight mb-1">
             {timeOfDay}, <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Alex</span>
           </h2>
-          <p className="text-slate-500 dark:text-slate-400 text-lg">You're on a 12-day streak! Keep it up.</p>
+          <p className="text-slate-500 dark:text-slate-400 text-lg">You&apos;re on a 12-day streak! Keep it up.</p>
         </div>
         <Button 
           variant="primary" 

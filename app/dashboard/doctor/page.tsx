@@ -18,7 +18,7 @@ export default function DoctorDashboard() {
     setLoading(true);
     try {
       const res = await fetch(`/api/data?type=user&userId=${patient.id}`);
-      constdata = await res.json();
+      const data = await res.json();
       setPatientDetails(data);
     } catch (error) {
       console.error("Failed to fetch patient details", error);
@@ -114,6 +114,7 @@ export default function DoctorDashboard() {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center overflow-hidden">
+                           {/* eslint-disable-next-line @next/next/no-img-element */}
                            <img src={patient.avatarUrl} alt={patient.name} className="w-full h-full object-cover" />
                         </div>
                         <span className="font-medium text-slate-900 dark:text-white">{patient.name}</span>
@@ -182,6 +183,7 @@ export default function DoctorDashboard() {
 
                 <div className="flex items-center gap-4 mb-8">
                   <div className="w-20 h-20 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={selectedPatient.avatarUrl} alt={selectedPatient.name} className="w-full h-full object-cover" />
                   </div>
                   <div>
