@@ -137,6 +137,59 @@ export default function DoctorDashboard() {
               ))}
             </div>
           </GlassCard>
+          
+          {/* Medication Lookup */}
+          <GlassCard className="mt-8">
+             <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <Search className="text-purple-500" />
+                Medication Lookup
+              </h3>
+            </div>
+            
+            <div className="relative mb-6">
+              <input 
+                type="text" 
+                placeholder="Search inventory (e.g., Amoxicillin, Pain)..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-purple-500 transition-all"
+              />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+            </div>
+
+            <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+              {inventory.length > 0 ? (
+                inventory.map((item) => (
+                  <div key={item.id} className="p-4 rounded-xl border border-slate-100 dark:border-slate-800 hover:border-purple-200 dark:hover:border-purple-900/50 transition-colors">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <h4 className="font-bold text-slate-900 dark:text-white">{item.name} <span className="text-slate-400 font-normal text-sm">({item.genericName})</span></h4>
+                        <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 mt-1 inline-block">
+                          {item.category}
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-emerald-600">${item.price.toFixed(2)}</p>
+                        <p className="text-xs text-slate-500">{item.stockLevel} in stock</p>
+                      </div>
+                    </div>
+                    <p className="text-sm text-slate-600 dark:text-slate-300 mb-3 line-clamp-2">{item.description}</p>
+                    <div className="flex items-center justify-between text-xs text-slate-500">
+                      <span>{item.strength} • {item.dosageForm}</span>
+                      {item.requiresPrescription && (
+                        <span className="text-amber-600 font-medium bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded">Rx Required</span>
+                      )}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-slate-400">
+                  <p>No medications found.</p>
+                </div>
+              )}
+            </div>
+          </GlassCard>
         </div>
 
         {/* Urgent Tasks */}
