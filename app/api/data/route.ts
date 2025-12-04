@@ -18,5 +18,13 @@ export async function GET(request: Request) {
         return NextResponse.json(prescriptions);
     }
 
+    if (type === 'user' && userId) {
+        const user = db.getUser(userId);
+        if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
+
+        const prescriptions = db.getPrescriptionsForUser(userId);
+        return NextResponse.json({ user, prescriptions });
+    }
+
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
 }

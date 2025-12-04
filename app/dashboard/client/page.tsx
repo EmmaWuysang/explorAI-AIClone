@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import GlassCard from '@/components/ui/GlassCard';
 import Button from '@/components/ui/Button';
 import StatCard from '@/components/ui/StatCard';
-import { Plus, Check, Clock, Pill, Activity, MapPin } from 'lucide-react';
-import ClinicMap from '@/components/maps/ClinicMap';
+import { Plus, Check, Clock, Pill, Activity, MapPin, Search } from 'lucide-react';
+import ClinicMap, { ClinicMapRef } from '@/components/maps/ClinicMap';
 import MapProvider from '@/components/maps/MapProvider';
 import { Location, Prescription } from '@/lib/db/mock-db';
 
@@ -14,6 +14,8 @@ export default function ClientDashboard() {
   const [locations, setLocations] = useState<Location[]>([]);
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const mapRef = useRef<ClinicMapRef>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -36,6 +38,12 @@ export default function ClientDashboard() {
 
     fetchData();
   }, []);
+
+  const handleSearch = () => {
+    if (mapRef.current && searchQuery) {
+      mapRef.current.search(searchQuery);
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -130,12 +138,32 @@ export default function ClientDashboard() {
 
           {/* Map Section */}
           <div className="space-y-4">
-             <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <MapPin className="text-blue-500" />
-                Nearby Care
-              </h3>
+             <div className="flex items-center justify-between">
+               <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <MapPin className="text-blue-500" />
+                  Nearby Care
+                </h3>
+                <div className="flex gap-2">
+                  <div className="relative">
+                    <input 
+                      type="text" 
+                      placeholder="Search pharmacies..." 
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                      className="pl-4 pr-10 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm focus:ring-2 focus:ring-blue-500"
+                    />
+                    <button 
+                      onClick={handleSearch}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-500"
+                    >
+                      <Search size={16} />
+                    </button>
+                  </div>
+                </div>
+             </div>
             <MapProvider>
-              <ClinicMap locations={locations} />
+              <ClinicMap ref={mapRef} locations={locations} />
             </MapProvider>
           </div>
         </div>

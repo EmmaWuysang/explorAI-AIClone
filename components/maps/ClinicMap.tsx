@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useImperativeHandle, forwardRef } from 'react';
 import { useMap } from './MapProvider';
 import GlassCard from '@/components/ui/GlassCard';
 import { Location } from '@/lib/db/mock-db';
@@ -10,11 +10,71 @@ interface ClinicMapProps {
   onLocationSelect?: (location: Location) => void;
 }
 
-export default function ClinicMap({ locations, onLocationSelect }: ClinicMapProps) {
+export interface ClinicMapRef {
+  search: (query: string) => void;
+}
+
+const ClinicMap = forwardRef<ClinicMapRef, ClinicMapProps>(({ locations, onLocationSelect }, ref) => {
   const { isLoaded, loadError } = useMap();
   const mapRef = useRef<HTMLDivElement>(null);
   const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);
+  const placesServiceRef = useRef<google.maps.places.PlacesService | null>(null);
+
+  // Expose search method
+  useImperativeHandle(ref, () => ({
+    search: (query: string) => {
+      if (!mapInstance || !placesServiceRef.current) return;
+
+      const request = {
+        query: query,
+        fields: ['name', 'geometry', 'formatted_address', 'place_id', 'types'],
+        locationBias: mapInstance.getBounds(), // Bias towards current view
+      };
+
+      placesServiceRef.current.findPlaceFromQuery(request, (results, status) => {
+        if (status === google.maps.places.PlacesServiceStatus.OK && results && results.length > 0) {
+          // Clear existing markers
+          markersRef.current.forEach(marker => marker.setMap(null));
+          markersRef.current = [];
+          
+          const bounds = new google.maps.LatLngBounds();
+
+          results.forEach(place => {
+            if (!place.geometry || !place.geometry.location) return;
+
+            const marker = new google.maps.Marker({
+              map: mapInstance,
+              position: place.geometry.location,
+              title: place.name,
+              animation: google.maps.Animation.DROP,
+            });
+
+            const locationData: Location = {
+              id: place.place_id || Math.random().toString(),
+              name: place.name || 'Unknown',
+              type: place.types?.includes('pharmacy') ? 'pharmacy' : 'clinic',
+              address: place.formatted_address || '',
+              lat: place.geometry.location.lat(),
+              lng: place.geometry.location.lng(),
+              rating: 0,
+              isOpen: true,
+              phone: ''
+            };
+
+            marker.addListener('click', () => {
+              if (onLocationSelect) onLocationSelect(locationData);
+            });
+
+            markersRef.current.push(marker);
+            bounds.extend(place.geometry.location);
+          });
+
+          mapInstance.fitBounds(bounds);
+        }
+      });
+    }
+  }));
 
   // Initialize Map
   useEffect(() => {
@@ -97,10 +157,11 @@ export default function ClinicMap({ locations, onLocationSelect }: ClinicMapProp
         zoomControl: true,
       });
       setMapInstance(map);
+      placesServiceRef.current = new google.maps.places.PlacesService(map);
     }
   }, [isLoaded, mapInstance]);
 
-  // Update Markers
+  // Update Markers (Initial Seed Data)
   useEffect(() => {
     if (mapInstance && locations.length > 0) {
       // Clear existing markers
@@ -167,4 +228,8 @@ export default function ClinicMap({ locations, onLocationSelect }: ClinicMapProp
       </div>
     </GlassCard>
   );
-}
+});
+
+ClinicMap.displayName = 'ClinicMap';
+
+export default ClinicMap;

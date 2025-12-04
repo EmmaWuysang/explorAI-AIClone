@@ -1,17 +1,34 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import GlassCard from '@/components/ui/GlassCard';
 import Button from '@/components/ui/Button';
-import { Users, FileText, AlertCircle, Search, Filter, MoreHorizontal } from 'lucide-react';
+import { Users, FileText, AlertCircle, Search, Filter, MoreHorizontal, X, Activity, Pill } from 'lucide-react';
 import { USERS } from '@/lib/db/mock-db';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function DoctorDashboard() {
-  // Filter only client users for the patient list
   const patients = USERS.filter(u => u.role === 'client');
+  const [selectedPatient, setSelectedPatient] = useState<any>(null);
+  const [patientDetails, setPatientDetails] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+
+  const handlePatientClick = async (patient: any) => {
+    setSelectedPatient(patient);
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/data?type=user&userId=${patient.id}`);
+      constdata = await res.json();
+      setPatientDetails(data);
+    } catch (error) {
+      console.error("Failed to fetch patient details", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 relative">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Doctor Portal</h2>
@@ -89,7 +106,11 @@ export default function DoctorDashboard() {
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {patients.map((patient, idx) => (
-                  <tr key={idx} className="group hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
+                  <tr 
+                    key={idx} 
+                    onClick={() => handlePatientClick(patient)}
+                    className="group hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
+                  >
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center overflow-hidden">
@@ -140,6 +161,87 @@ export default function DoctorDashboard() {
           </GlassCard>
         </div>
       </div>
+
+      {/* Patient Details Modal */}
+      <AnimatePresence>
+        {selectedPatient && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-2xl"
+            >
+              <GlassCard className="relative max-h-[80vh] overflow-y-auto">
+                <button 
+                  onClick={() => setSelectedPatient(null)}
+                  className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                >
+                  <X size={20} />
+                </button>
+
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="w-20 h-20 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+                    <img src={selectedPatient.avatarUrl} alt={selectedPatient.name} className="w-full h-full object-cover" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-slate-900 dark:text-white">{selectedPatient.name}</h3>
+                    <p className="text-slate-500">{selectedPatient.email}</p>
+                  </div>
+                </div>
+
+                {loading ? (
+                  <div className="flex justify-center py-12">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                  </div>
+                ) : patientDetails ? (
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800">
+                        <div className="flex items-center gap-2 mb-2 text-blue-600 dark:text-blue-400">
+                          <Activity size={20} />
+                          <span className="font-bold">Adherence</span>
+                        </div>
+                        <p className="text-2xl font-bold text-slate-900 dark:text-white">95%</p>
+                      </div>
+                      <div className="p-4 rounded-xl bg-purple-50 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800">
+                        <div className="flex items-center gap-2 mb-2 text-purple-600 dark:text-purple-400">
+                          <Pill size={20} />
+                          <span className="font-bold">Active Meds</span>
+                        </div>
+                        <p className="text-2xl font-bold text-slate-900 dark:text-white">{patientDetails.prescriptions?.length || 0}</p>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="font-bold text-lg mb-4 text-slate-900 dark:text-white">Medication History</h4>
+                      <div className="space-y-3">
+                        {patientDetails.prescriptions?.map((rx: any, i: number) => (
+                          <div key={i} className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <p className="font-bold text-slate-900 dark:text-white">{rx.medication?.name}</p>
+                                <p className="text-sm text-slate-500">{rx.instructions}</p>
+                              </div>
+                              <span className={`px-2 py-1 rounded text-xs font-bold ${
+                                rx.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-slate-200 text-slate-600'
+                              }`}>
+                                {rx.status}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-center text-slate-500">No details available.</p>
+                )}
+              </GlassCard>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
