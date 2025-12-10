@@ -413,6 +413,7 @@ export default function DoctorDashboard() {
                             <div key={i} className="flex gap-3 items-start p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700">
                                 <div className={`mt-1 w-2 h-2 rounded-full shrink-0 ${
                                     act.type === 'PRESCRIPTION_REDEEMED' ? 'bg-green-500' : 
+                                    act.type === 'MEDICATION_TAKEN' ? 'bg-purple-500' :
                                     act.type === 'PRESCRIPTION_CREATED' ? 'bg-blue-500' : 'bg-slate-400'
                                 }`} />
                                 <div>

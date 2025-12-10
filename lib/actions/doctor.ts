@@ -113,10 +113,36 @@ export async function getRecentActivity(doctorId: string) {
         })
 
         // 3. Combine and Sort
+        // 3. Combine and Sort
         const combined = [
-            ...recentRx.map(rx => ({ type: 'prescription', date: rx.updatedAt, data: rx })),
-            ...recentLogs.map(log => ({ type: 'medication_log', date: log.takenAt, data: log }))
-        ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+            ...recentRx.map((rx) => {
+                const isRedemption = rx.status === 'REDEEMED' && rx.redeemedAt
+                const type = isRedemption ? 'PRESCRIPTION_REDEEMED' : 'PRESCRIPTION_CREATED'
+                const description = isRedemption
+                    ? `${rx.patient.name} picked up ${rx.medicationName}`
+                    : `Prescribed ${rx.medicationName} to ${rx.patient.name}`
+
+                return {
+                    type,
+                    description,
+                    timestamp: rx.updatedAt, // Use updatedAt which changes on redemption
+                    data: rx
+                }
+            }),
+            ...recentLogs.map((log) => {
+                // @ts-ignore
+                const patientName = log.prescription?.patient?.name || 'Unknown'
+                // @ts-ignore
+                const medName = log.prescription?.medicationName || 'Medication'
+                const description = `${patientName} took ${medName}`
+                return {
+                    type: 'MEDICATION_TAKEN',
+                    description,
+                    timestamp: log.takenAt,
+                    data: log
+                }
+            })
+        ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
             .slice(0, 10);
 
         return { success: true, data: combined }

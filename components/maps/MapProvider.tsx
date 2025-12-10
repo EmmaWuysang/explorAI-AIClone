@@ -21,7 +21,7 @@ export default function MapProvider({ children }: MapProviderProps) {
   const [loadError, setLoadError] = useState<Error | undefined>(undefined);
 
   useEffect(() => {
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_API_KEY;
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
     
     if (!apiKey) {
       console.warn("Google Maps API key is missing");
