@@ -1,6 +1,8 @@
 import { NextRequest } from "next/server";
 import { PersonaManager } from "@/lib/persona-manager";
 import { AIClient } from "@/lib/ai-client";
+import { tools } from "@/lib/ai/tools/definitions";
+import { toolRegistry } from "@/lib/ai/tools/registry";
 
 /**
  * POST /api/chat
@@ -8,7 +10,6 @@ import { AIClient } from "@/lib/ai-client";
  */
 export async function POST(request: NextRequest) {
 	try {
-		// Parse request body
 		let body;
 		try {
 			body = await request.json();
@@ -19,174 +20,157 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
-		const { message, personaId = "default", conversationHistory = [], images = [] } = body;
+		const { message, personaId = "default", conversationHistory = [], images = [], dashboardContext } = body;
 
-		// Validate message
+		// Validation logic
 		if (!message || typeof message !== "string" || !message.trim()) {
-			return new Response(
-				JSON.stringify({
-					error: "Message is required and must be a non-empty string",
-				}),
-				{ status: 400, headers: { "Content-Type": "application/json" } }
-			);
+			return new Response(JSON.stringify({ error: "Message required" }), { status: 400 });
 		}
 
-		// Get persona configuration with fallback
-		let persona = PersonaManager.getPersona(personaId);
-
-		// If requested persona not found, try default
-		if (!persona && personaId !== "default") {
-			persona = PersonaManager.getPersona("default");
-		}
-
-		// If still no persona, use hardcoded fallback
+		let persona = PersonaManager.getPersona(personaId) || PersonaManager.getPersona("default");
 		if (!persona) {
 			persona = {
 				id: "default",
-				name: "Default Assistant",
-				description: "Fallback assistant",
-				systemPrompt: "You are a helpful AI assistant.",
+				name: "Default",
+				description: "Default fallback persona",
+				systemPrompt: "You are a helpful AI.",
 				temperature: 0.7,
-				maxTokens: 2048,
+				maxTokens: 2048
 			};
-			console.warn("[API] No persona files found, using hardcoded fallback");
 		}
 
-		// Validate API key
 		const apiKey = process.env.GOOGLE_API_KEY;
-		console.log(
-			"[API] GOOGLE_API_KEY exists:",
-			!!apiKey,
-			"length:",
-			apiKey?.length || 0
-		);
+		if (!apiKey) return new Response(JSON.stringify({ error: "No API Key" }), { status: 500 });
 
-		if (!apiKey) {
-			return new Response(
-				JSON.stringify({
-					error:
-						"Google API key not configured. Please add GOOGLE_API_KEY to your .env file.",
-				}),
-				{ status: 500, headers: { "Content-Type": "application/json" } }
-			);
+
+		const messages: Array<{ role: "system" | "user" | "assistant"; content: string; }> = [];
+
+		let finalSystemPrompt = persona.systemPrompt || "You are a helpful AI assistant.";
+		if (dashboardContext) {
+			finalSystemPrompt += `\n\nCRITICAL CONTEXT: You are active in ${dashboardContext}. Only answer relevant questions.`;
 		}
 
-		// Build message array with conversation history
-		const messages: Array<{
-			role: "system" | "user" | "assistant";
-			content: string;
-		}> = [];
+		messages.push({ role: "system", content: finalSystemPrompt });
 
-		// Add system prompt
-		if (persona.systemPrompt) {
-			messages.push({
-				role: "system",
-				content: persona.systemPrompt,
-			});
-		}
-
-		// Add conversation history (if provided)
 		if (Array.isArray(conversationHistory)) {
 			for (const msg of conversationHistory) {
-				if (
-					msg.role &&
-					msg.content &&
-					["user", "assistant"].includes(msg.role)
-				) {
-					messages.push({
-						role: msg.role as "user" | "assistant",
-						content: String(msg.content),
-					});
+				if (["user", "assistant"].includes(msg.role)) {
+					messages.push({ role: msg.role as "user" | "assistant", content: String(msg.content) });
 				}
 			}
 		}
 
-		// Add current user message
-		messages.push({
-			role: "user",
-			content: message.trim(),
-		});
+		messages.push({ role: "user", content: message.trim() });
 
-		console.log("[API] Processing chat request:", {
-			personaId: persona.id,
-			messageLength: message.length,
-			totalMessages: messages.length,
-			temperature: persona.temperature || 0.7,
-			maxTokens: persona.maxTokens || 2048,
-		});
-
-		// Create streaming response
 		const stream = new ReadableStream({
 			async start(controller) {
 				try {
-					const modelId = persona.model || "gemini-2.5-flash";
+					const modelId = persona!.model || "gemini-2.0-flash";
 
-					const streamGenerator = AIClient.streamChat(modelId, messages, {
-						temperature: persona.temperature ?? 0.7,
-						maxTokens: persona.maxTokens ?? 2048,
+					// First pass: Call model with tools
+					let currentStream = AIClient.streamChat(modelId, messages, {
+						temperature: persona!.temperature ?? 0.7,
+						maxTokens: persona!.maxTokens ?? 2048,
 						images: images,
+						tools: tools as any[]
 					});
 
-					for await (const chunk of streamGenerator) {
-						if (chunk.error) {
-							console.error("[API] Stream error:", chunk.error);
-							controller.enqueue(
-								new TextEncoder().encode(
-									`data: ${JSON.stringify({ error: chunk.error })}\n\n`
-								)
-							);
-							controller.enqueue(new TextEncoder().encode("data: [DONE]\n\n"));
-							controller.close();
-							return;
-						}
+					// We need to track if we are in a tool call loop
+					// For simplicity in this iteration, we handle ONE round of tool execution (User -> AI -> Tool -> AI -> User)
 
-						if (chunk.done) {
-							controller.enqueue(new TextEncoder().encode("data: [DONE]\n\n"));
-							controller.close();
-							return;
-						}
+					let toolCallsToExecute: any[] = [];
+					let fullText = "";
 
+					for await (const chunk of currentStream) {
+						if (chunk.toolCalls) {
+							toolCallsToExecute.push(...chunk.toolCalls);
+						}
 						if (chunk.content) {
-							controller.enqueue(
-								new TextEncoder().encode(
-									`data: ${JSON.stringify({ content: chunk.content })}\n\n`
-								)
-							);
+							fullText += chunk.content;
+							// Stream partial text if any (usually null if tool calling)
+							controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ content: chunk.content })}\n\n`));
+						}
+						if (chunk.error) {
+							throw new Error(chunk.error);
 						}
 					}
-				} catch (error) {
-					console.error("[API] Error in stream:", error);
-					controller.enqueue(
-						new TextEncoder().encode(
-							`data: ${JSON.stringify({
-								error: "Streaming error",
-								message:
-									error instanceof Error ? error.message : "Unknown error",
-							})}\n\n`
-						)
-					);
+
+					// If we have tool calls, execute them
+					if (toolCallsToExecute.length > 0) {
+						// Notify client we are executing specific tools?
+						// For now, let's keep it invisible or send a specialized event if needed.
+
+						// 1. Add the tool calls to history as "model" response
+						// But `messages` array in `AIClient` expects `assistant` role content.
+						// The structure of `messages` in `AIClient` is generic `content: string`. 
+						// To support function calling history properly, `AIClient` needs to support `parts`.
+						// Since `AIClient` converts everything to `parts` anyway, we might need to modify `AIClient` 
+						// OR we just append the result as a user message "System Tool Output: ..." to trick it for now
+						// IF we want to strictly follow Gemini multi-turn chat with tools.
+
+						// Hack for stability: Append the tool result as a SYSTEM message or USER message representing the tool.
+						// "Tool execution result: ..."
+
+						for (const call of toolCallsToExecute) {
+							const fn = toolRegistry[call.name];
+							if (fn) {
+								try {
+									console.log(`[API] Executing tool ${call.name}`);
+									// Inform client?
+									controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ content: `\n\n_Executing ${call.name}..._\n\n` })}\n\n`));
+
+									const result = await fn(call.args, { dashboardContext });
+
+									// Add result to messages context
+									// We effectively extend the conversation
+									messages.push({
+										role: "assistant",
+										content: `Checking... (Tool ${call.name} called)`
+									});
+									messages.push({
+										role: "user",
+										content: `Tool '${call.name}' returned: ${JSON.stringify(result)}`
+									});
+
+								} catch (e) {
+									messages.push({
+										role: "user",
+										content: `Tool '${call.name}' failed: ${e}`
+									});
+								}
+							}
+						}
+
+						// 2. Call model again with new history (Second pass)
+						currentStream = AIClient.streamChat(modelId, messages, {
+							temperature: 0.7,
+							maxTokens: 2048,
+							// Don't pass tools again to prevent infinite loops? or pass them if multi-step allowed.
+							// Let's passed them just in case.
+							tools: tools as any[]
+						});
+
+						for await (const chunk of currentStream) {
+							if (chunk.content) {
+								controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ content: chunk.content })}\n\n`));
+							}
+						}
+					}
+
 					controller.enqueue(new TextEncoder().encode("data: [DONE]\n\n"));
 					controller.close();
+
+				} catch (error) {
+					console.error("[API] Stream error:", error);
+					controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ error: String(error) })}\n\n`));
+					controller.close();
 				}
-			},
+			}
 		});
 
-		return new Response(stream, {
-			headers: {
-				"Content-Type": "text/event-stream",
-				"Cache-Control": "no-cache, no-transform",
-				Connection: "keep-alive",
-				"X-Accel-Buffering": "no",
-			},
-		});
+		return new Response(stream, { headers: { "Content-Type": "text/event-stream" } });
+
 	} catch (error) {
-		console.error("[API] Fatal error in chat endpoint:", error);
-		return new Response(
-			JSON.stringify({
-				error: "Internal server error",
-				message: error instanceof Error ? error.message : "Unknown error",
-			}),
-			{ status: 500, headers: { "Content-Type": "application/json" } }
-		);
+		return new Response(JSON.stringify({ error: "Server Error" }), { status: 500 });
 	}
 }

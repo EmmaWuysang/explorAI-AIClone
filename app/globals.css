@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* MedAssist AI Premium Design System */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
@@ -35,19 +37,21 @@
   /* Blue-500 */
 
   /* Text Colors - High Contrast & Readability */
-  --color-text-primary: 15, 23, 42;
-  /* Slate-900 */
-  --color-text-secondary: 71, 85, 105;
-  /* Slate-600 */
-  --color-text-tertiary: 148, 163, 184;
-  /* Slate-400 */
+  --color-text-primary: 2, 6, 23;
+  /* Slate-950 (Darker than 900) */
+  --color-text-secondary: 51, 65, 85;
+  /* Slate-700 (Darker than 600) */
+  --color-text-tertiary: 100, 116, 139;
+  /* Slate-500 (Darker than 400) */
   --color-text-on-brand: 255, 255, 255;
 
-  /* Glassmorphism - Refined */
-  --glass-bg: rgba(255, 255, 255, 0.65);
-  --glass-border: rgba(255, 255, 255, 0.4);
-  --glass-highlight: rgba(255, 255, 255, 0.8);
-  --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
+  /* Glassmorphism - Refined for Light Mode Visibility */
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  /* More opaque */
+  --glass-border: rgba(226, 232, 240, 1);
+  /* Slate-200 Solid Border */
+  --glass-highlight: rgba(255, 255, 255, 1);
+  --glass-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
   --glass-blur: 16px;
 
   /* Shadows - Layered Depth */
@@ -62,29 +66,7 @@
   --ease-in-out-circ: cubic-bezier(0.785, 0.135, 0.15, 0.86);
 }
 
-/* Dark Mode Overrides - Deep Space/Midnight */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-surface-1: 15, 23, 42;
-    /* Slate-900 */
-    --color-surface-2: 30, 41, 59;
-    /* Slate-800 */
-    --color-surface-3: 2, 6, 23;
-    /* Slate-950 */
-
-    --glass-bg: rgba(30, 41, 59, 0.6);
-    --glass-border: rgba(255, 255, 255, 0.08);
-    --glass-highlight: rgba(255, 255, 255, 0.1);
-    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
-
-    --color-text-primary: 248, 250, 252;
-    /* Slate-50 */
-    --color-text-secondary: 203, 213, 225;
-    /* Slate-300 */
-    --color-text-tertiary: 100, 116, 139;
-    /* Slate-500 */
-  }
-}
+/* Dark Mode Removed as per user request for streamlined Light Mode */
 
 /* Global Resets & Typography */
 body {

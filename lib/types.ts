@@ -36,16 +36,22 @@ export interface InventoryItem {
 
 export interface Prescription {
   id: string;
-  medicationId: string;
+  medicationId?: string;
+  medicationName: string;
+  dosage: string;
+  instructions: string;
+  status: string;
+  token?: string;
+  startDate?: string;
+  refillsRemaining?: number;
+
+  // Relations
   patientId: string;
   doctorId: string;
-  pharmacistId?: string; // Assigned pharmacist for verification
-  status: 'pending' | 'verified' | 'filled' | 'cancelled';
-  instructions: string;
-  startDate: string;
-  endDate?: string;
-  refillsRemaining: number;
-  createdAt: string;
+  doctor?: any;
+  refillRequests?: any[];
+
+  createdAt?: string | Date;
 }
 
 export interface Reminder {

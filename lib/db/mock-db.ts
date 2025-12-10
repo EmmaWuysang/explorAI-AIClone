@@ -216,6 +216,8 @@ export const PRESCRIPTIONS: Prescription[] = [
     {
         id: 'rx1',
         medicationId: 'm1',
+        medicationName: 'Amoxicillin',
+        dosage: '500mg',
         patientId: 'u1',
         doctorId: 'd1',
         status: 'pending',
@@ -227,6 +229,8 @@ export const PRESCRIPTIONS: Prescription[] = [
     {
         id: 'rx2',
         medicationId: 'm2',
+        medicationName: 'Lisinopril',
+        dosage: '10mg',
         patientId: 'u1',
         doctorId: 'd1',
         status: 'filled',

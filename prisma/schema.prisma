@@ -1,0 +1,159 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Pharmacy {
+  id          String      @id @default(cuid())
+  name        String
+  address     String
+  latitude    Float
+  longitude   Float
+  phone       String
+  email       String?
+  inventory   Inventory[]
+  redeemedPrescriptions Prescription[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model Product {
+  id          String      @id @default(cuid())
+  name        String
+  description String
+  category    String
+  manufacturer String
+  inventory   Inventory[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model Inventory {
+  id          String   @id @default(cuid())
+  pharmacyId  String
+  productId   String
+  quantity    Int
+  incomingStock Int @default(0)
+  price       Float
+  lastUpdated DateTime @default(now())
+  
+  pharmacy    Pharmacy @relation(fields: [pharmacyId], references: [id])
+  product     Product  @relation(fields: [productId], references: [id])
+
+  @@unique([pharmacyId, productId])
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  role      String   // 'doctor', 'client', 'pharmacist'
+  avatarUrl String?
+  
+  // Relations
+  prescriptionsAsPatient Prescription[] @relation("PatientPrescriptions")
+  prescriptionsAsDoctor  Prescription[] @relation("DoctorPrescriptions")
+  
+  notesWritten           DoctorNote[]   @relation("DoctorNotesWritten")
+  notesReceived          DoctorNote[]   @relation("DoctorNotesReceived")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  appointmentsAsPatient Appointment[] @relation("PatientAppointments")
+  appointmentsAsDoctor  Appointment[] @relation("DoctorAppointments")
+
+  sentMessages     Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  content   String
+  senderId  String
+  receiverId String
+  createdAt DateTime @default(now())
+
+  sender    User     @relation("SentMessages", fields: [senderId], references: [id])
+  receiver  User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+}
+
+model DoctorNote {
+  id        String   @id @default(cuid())
+  content   String
+  
+  doctorId  String
+  doctor    User     @relation("DoctorNotesWritten", fields: [doctorId], references: [id])
+  
+  patientId String
+  patient   User     @relation("DoctorNotesReceived", fields: [patientId], references: [id])
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Appointment {
+  id        String   @id @default(cuid())
+  date      DateTime
+  status    String   @default("PENDING") // 'PENDING', 'CONFIRMED', 'CANCELLED', 'COMPLETED'
+  
+  patientId String
+  patient   User     @relation("PatientAppointments", fields: [patientId], references: [id])
+  
+  doctorId  String
+  doctor    User     @relation("DoctorAppointments", fields: [doctorId], references: [id])
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Prescription {
+  id             String   @id @default(cuid())
+  medicationName String
+  dosage         String
+  instructions   String
+  status         String   @default("PENDING") // 'PENDING', 'REDEEMED'
+  refillsRemaining Int    @default(3)
+  token          String   @unique // Hashed key for QR code
+  
+  // Relations
+  patientId      String
+  patient        User     @relation("PatientPrescriptions", fields: [patientId], references: [id])
+  
+  doctorId       String
+  doctor         User     @relation("DoctorPrescriptions", fields: [doctorId], references: [id])
+  
+  redeemedAt           DateTime?
+  redeemedByPharmacyId String?
+  redeemedByPharmacy   Pharmacy? @relation(fields: [redeemedByPharmacyId], references: [id])
+  refillRequests       RefillRequest[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  logs MedicationLog[]
+}
+
+model MedicationLog {
+  id             String       @id @default(cuid())
+  prescriptionId String
+  prescription   Prescription @relation(fields: [prescriptionId], references: [id])
+  takenAt        DateTime     @default(now())
+  status         String       // 'TAKEN', 'MISSED', 'SKIPPED'
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model RefillRequest {
+  id             String       @id @default(cuid())
+  prescriptionId String
+  status         String       @default("PENDING") // PENDING, APPROVED, DENIED
+  requestDate    DateTime     @default(now())
+  
+  prescription   Prescription @relation(fields: [prescriptionId], references: [id])
+}

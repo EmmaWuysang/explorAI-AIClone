@@ -87,12 +87,12 @@ export default function DashboardLayout({
                 <p className="text-xs text-slate-500 dark:text-slate-400 truncate">Pro Plan</p>
               </div>
             </div>
-            <div className="flex gap-1">
-              <button className="flex-1 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 transition-colors">
-                <Settings size={16} className="mx-auto" />
+            <div className="flex gap-1 items-center justify-around px-1">
+              <button className="p-2 rounded-lg hover:bg-slate-100 text-slate-500 transition-colors">
+                <Settings size={16} />
               </button>
-              <button className="flex-1 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-500 hover:text-red-500 transition-colors">
-                <LogOut size={16} className="mx-auto" />
+              <button className="p-2 rounded-lg hover:bg-red-50 text-slate-500 hover:text-red-500 transition-colors">
+                <LogOut size={16} />
               </button>
             </div>
           </div>

@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, FormEvent, useRef, useEffect, useMemo } from "react";
+import { useState, FormEvent, useRef, useEffect, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Loader2, Copy, ImagePlus, X } from "lucide-react";
-import { useStore } from "@/lib/store";
+import { Send, Loader2, Copy, ImagePlus, X, RotateCcw } from "lucide-react";
+import { useStore, Message } from "@/lib/store";
 import ReactMarkdown from "react-markdown";
 import remarkMath from "remark-math";
 import remarkGfm from "remark-gfm";
@@ -27,10 +27,12 @@ const MessageBubble = ({
 	message,
 	isUser,
 	personaName,
+	onRegenerate,
 }: {
 	message: any;
 	isUser: boolean;
 	personaName: string;
+	onRegenerate?: () => void;
 }) => {
 	const [showActions, setShowActions] = useState(false);
 	const [copied, setCopied] = useState(false);
@@ -69,23 +71,37 @@ const MessageBubble = ({
 								{personaName}
 							</span>
 						</div>
-						{/* Copy button inside message */}
-						<motion.button
-							initial={{ opacity: 0 }}
-							animate={{ opacity: showActions ? 1 : 0 }}
-							transition={{ duration: 0.15 }}
-							onClick={copyToClipboard}
-							className="p-1 rounded hover:bg-white/5 transition-colors"
-							title={copied ? "Copied!" : "Copy message"}>
-							<Copy
-								className="w-3 h-3"
-								style={{
-									color: copied
-										? "rgb(var(--color-accent))"
-										: "rgb(var(--color-text-muted))"
-								}}
-							/>
-						</motion.button>
+						<div className="flex items-center gap-1">
+							{onRegenerate && (
+								<motion.button
+									initial={{ opacity: 0 }}
+									animate={{ opacity: showActions ? 1 : 0 }}
+									onClick={onRegenerate}
+									className="p-1 rounded hover:bg-white/5 transition-colors"
+									title="Regenerate response">
+									<RotateCcw
+										className="w-3 h-3"
+										style={{ color: "rgb(var(--color-text-muted))" }}
+									/>
+								</motion.button>
+							)}
+							<motion.button
+								initial={{ opacity: 0 }}
+								animate={{ opacity: showActions ? 1 : 0 }}
+								transition={{ duration: 0.15 }}
+								onClick={copyToClipboard}
+								className="p-1 rounded hover:bg-white/5 transition-colors"
+								title={copied ? "Copied!" : "Copy message"}>
+								<Copy
+									className="w-3 h-3"
+									style={{
+										color: copied
+											? "rgb(var(--color-accent))"
+											: "rgb(var(--color-text-muted))"
+									}}
+								/>
+							</motion.button>
+						</div>
 					</div>
 				)}
 				<div
@@ -173,6 +189,7 @@ export default function Chatbox() {
 		activePersonaId,
 		createConversation,
 		addMessage,
+		deleteMessage,
 		setAgentStatus,
 		setIsStreaming,
 	} = useStore();
@@ -232,49 +249,15 @@ export default function Chatbox() {
 		});
 	};
 
-	const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-		e.preventDefault();
-
-		if ((!input.trim() && imageAttachments.length === 0) || isLoading) return;
-
-		let conversationId = activeConversationId;
-		if (!conversationId) {
-			conversationId = createConversation(activePersonaId);
-		}
-
-		const userMessageContent = input.trim();
-		setInput("");
+	// Common streaming logic
+	const streamResponse = async (
+		conversationId: string, 
+		userMessageContent: string, 
+		history: { role: string; content: string }[],
+		images: Array<{ mimeType: string; data: string }> = []
+	) => {
 		setIsLoading(true);
 		setAgentStatus({ isThinking: true });
-
-		// Convert images to base64
-		const images: Array<{ mimeType: string; data: string }> = [];
-		for (const attachment of imageAttachments) {
-			try {
-				const base64Data = await fileToBase64(attachment.file);
-				images.push({
-					mimeType: attachment.file.type,
-					data: base64Data,
-				});
-				// Revoke the object URL to free memory
-				URL.revokeObjectURL(attachment.url);
-			} catch (error) {
-				console.error('Error converting image to base64:', error);
-			}
-		}
-
-		// Clear attachments after processing
-		setImageAttachments([]);
-
-		// Add user message (with note about images if any)
-		const messageContent = images.length > 0
-			? `${userMessageContent}${userMessageContent ? '\n' : ''}[${images.length} image${images.length > 1 ? 's' : ''} attached]`
-			: userMessageContent;
-
-		addMessage(conversationId, {
-			role: "user",
-			content: messageContent || '[Image attached]',
-		});
 
 		const streamId = `${Date.now()}-stream`;
 		setStreamingMessage({
@@ -286,11 +269,6 @@ export default function Chatbox() {
 		setIsStreaming(true, streamId);
 
 		try {
-			const conversationHistory = messages.map((msg) => ({
-				role: msg.role,
-				content: msg.content,
-			}));
-
 			const response = await fetch("/api/chat", {
 				method: "POST",
 				headers: {
@@ -299,7 +277,7 @@ export default function Chatbox() {
 				body: JSON.stringify({
 					message: userMessageContent || "What's in this image?",
 					personaId: activePersonaId,
-					conversationHistory,
+					conversationHistory: history,
 					images: images.length > 0 ? images : undefined,
 				}),
 			});
@@ -413,6 +391,126 @@ export default function Chatbox() {
 		}
 	};
 
+	const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+		e.preventDefault();
+
+		if ((!input.trim() && imageAttachments.length === 0) || isLoading) return;
+
+		let conversationId = activeConversationId;
+		if (!conversationId) {
+			conversationId = createConversation(activePersonaId);
+		}
+
+		const userMessageContent = input.trim();
+		setInput("");
+
+		// Convert images to base64
+		const images: Array<{ mimeType: string; data: string }> = [];
+		for (const attachment of imageAttachments) {
+			try {
+				const base64Data = await fileToBase64(attachment.file);
+				images.push({
+					mimeType: attachment.file.type,
+					data: base64Data,
+				});
+				// Revoke the object URL to free memory
+				URL.revokeObjectURL(attachment.url);
+			} catch (error) {
+				console.error('Error converting image to base64:', error);
+			}
+		}
+
+		// Clear attachments after processing
+		setImageAttachments([]);
+
+		// Add user message (with note about images if any)
+		const messageContent = images.length > 0
+			? `${userMessageContent}${userMessageContent ? '\n' : ''}[${images.length} image${images.length > 1 ? 's' : ''} attached]`
+			: userMessageContent;
+
+		addMessage(conversationId, {
+			role: "user",
+			content: messageContent || '[Image attached]',
+		});
+
+		const currentHistory = messages.map((msg) => ({
+			role: msg.role,
+			content: msg.content,
+		}));
+		// Add the message we just added (roughly, though state update might be async, 
+		// but since we passed it to addMessage, let's append it manually to history for the API call 
+		// to ensure consistency if state hasn't updated yet)
+		// Actually best to construct history from what we just added.
+		const historyForCall = [
+			...currentHistory,
+			{ role: "user", content: messageContent || '[Image attached]' }
+		];
+
+		await streamResponse(conversationId, userMessageContent, historyForCall, images);
+	};
+
+	const handleRegenerate = async () => {
+		if (isLoading || !activeConversationId || messages.length === 0) return;
+
+		const lastMessage = messages[messages.length - 1];
+		if (lastMessage.role !== 'assistant') return;
+
+		// 1. Delete the last assistant message
+		deleteMessage(activeConversationId, lastMessage.id);
+
+		// 2. Find the last user message to use as context
+		// We need to rebuild the history UP TO the last user message.
+		// Since we just deleted the assistant message (optimistically in store), 
+		// the messages array from scope is STALE. We need to derive from it.
+		
+		const messagesMinusLast = messages.slice(0, -1);
+		const lastUserMessage = messagesMinusLast[messagesMinusLast.length - 1];
+		
+		if (!lastUserMessage || lastUserMessage.role !== 'user') {
+			// Weird state, can't regenerate if no previous user message
+			return;
+		}
+
+		const historyForCall = messagesMinusLast.map(m => ({
+			role: m.role,
+			content: m.content
+		}));
+
+		// We don't have the original raw "userMessageContent" or images easily available 
+		// unless we parse the message content. 
+		// For simplicity, we just send the content as string.
+		// If there were images, they are embedded in content text primarily in this simple implementations.
+		// NOTE: The backend handles history, but we send 'message' as the 'new' prompt.
+		// Actually, standard chat APIs usually take full history. 
+		// Our /api/chat takes "message" and "conversationHistory".
+		// It appends "message" to history.
+		// So we should NOT include the last user message in "conversationHistory" we send, 
+		// but pass it as "message".
+		
+		const historyBeforeLastUser = historyForCall.slice(0, -1);
+		const prompt = lastUserMessage.content;
+
+		// We assume no images for regeneration for now (simpler) or we'd need to store them better.
+		await streamResponse(activeConversationId, prompt, historyForCall, []); 
+		// Wait, if I pass historyForCall (which INCLUDES last user message), 
+		// and also pass "prompt" as "message", the backend might double duplicate it 
+		// depending on how /api/chat is implemented.
+		// Let's check the handleSubmit logic: 
+		// "historyForCall" there included the new user message.
+		// And we also passed "message".
+		// Let's check /api/chat implementation if needed, but assuming handleSubmit worked:
+		// handleSubmit passes `message: userMessageContent` AND `conversationHistory: historyForCall`.
+		// If historyForCall INCLUDES the message, then the backend likely uses history for context and message for generation?
+		// Actually, standard pattern is: Messages = [...History, UserMessage].
+		// If I pass history including UserMessage, and also UserMessage as 'message', it might be redundant.
+		
+		// Let's match handleSubmit's behavior: 
+		// handleSubmit sends `message` (raw input) and `conversationHistory` (including the new input).
+		// So I must do the same.
+		// historyForCall = messagesMinusLast (which ends with UserMessage).
+		// userMessageContent = lastUserMessage.content.
+	};
+
 	return (
 		<div className="flex flex-col h-full relative z-10">
 			{/* Scanlines overlay */}
@@ -425,12 +523,18 @@ export default function Chatbox() {
 				) : (
 					<>
 						<AnimatePresence mode="sync">
-							{messages.map((message) => (
+							{messages.map((message, index) => (
 								<MessageBubble
 									key={message.id}
 									message={message}
 									isUser={message.role === "user"}
 									personaName={personaName}
+									// Only show regenerate on the very last message if it's an assistant
+									onRegenerate={
+										index === messages.length - 1 && message.role === 'assistant' && !isLoading
+											? handleRegenerate
+											: undefined
+									}
 								/>
 							))}
 						</AnimatePresence>

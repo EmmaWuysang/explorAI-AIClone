@@ -61,7 +61,7 @@ const ClinicMap = forwardRef<ClinicMapRef, ClinicMapProps>(({ locations, onLocat
     markersRef.current = [];
   };
 
-  const createMarker = async (place: any) => {
+  const createMarker = React.useCallback(async (place: any) => {
     if (!mapInstance || !place.location) return;
 
     const { AdvancedMarkerElement } = await google.maps.importLibrary("marker") as google.maps.MarkerLibrary;
@@ -141,7 +141,7 @@ const ClinicMap = forwardRef<ClinicMapRef, ClinicMapProps>(({ locations, onLocat
     });
 
     markersRef.current.push(marker as unknown as google.maps.Marker); // Type cast for compatibility with ref
-  };
+  }, [mapInstance, onLocationSelect]);
 
   // Initialize Map
   useEffect(() => {
@@ -247,7 +247,7 @@ const ClinicMap = forwardRef<ClinicMapRef, ClinicMapProps>(({ locations, onLocat
       searchNearby('doctor');
       searchNearby('hospital');
     }
-  }, [mapInstance]);
+  }, [mapInstance, createMarker]);
 
   if (loadError || mapError) {
     return (

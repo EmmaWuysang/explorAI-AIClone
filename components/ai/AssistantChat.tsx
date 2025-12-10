@@ -4,16 +4,29 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Send, X, Minimize2, Maximize2 } from 'lucide-react';
 import Button from '@/components/ui/Button';
+import { usePathname } from 'next/navigation';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 export default function AssistantChat() {
+// ... existing code ...
+
   const [isOpen, setIsOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [messages, setMessages] = useState<{role: 'user' | 'assistant', content: string}[]>([
-    { role: 'assistant', content: 'Hello! I am your medication assistant. How can I help you today?' }
+    { role: 'assistant', content: 'Hello! I am your AI assistant. How can I help you within this dashboard?' }
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
+
+  const getDashboardContext = () => {
+      if (pathname?.includes('/client')) return 'Client Dashboard (Patient View)';
+      if (pathname?.includes('/doctor')) return 'Doctor Dashboard (Provider View)';
+      if (pathname?.includes('/pharmacist')) return 'Pharmacist Dashboard (Inventory View)';
+      return 'General Application';
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -23,25 +36,91 @@ export default function AssistantChat() {
     scrollToBottom();
   }, [messages, isTyping]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!input.trim()) return;
     
+    const userMessage = input.trim();
     const newMessages = [
       ...messages,
-      { role: 'user' as const, content: input }
+      { role: 'user' as const, content: userMessage }
     ];
     setMessages(newMessages);
     setInput('');
     setIsTyping(true);
 
-    // Simulate AI response with typing delay
-    setTimeout(() => {
-      setIsTyping(false);
-      setMessages(prev => [
-        ...prev,
-        { role: 'assistant', content: "I'm a demo assistant. I can't process real requests yet, but I'm here to help with your medication reminders!" }
-      ]);
-    }, 2000);
+    try {
+        const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                message: userMessage,
+                conversationHistory: messages.map(m => ({ role: m.role, content: m.content })),
+                dashboardContext: getDashboardContext()
+            })
+        });
+
+        if (!response.ok) throw new Error('Failed to send message');
+
+        const reader = response.body?.getReader();
+        const decoder = new TextDecoder();
+        let assistantMessage = '';
+        
+        // Add placeholder message
+        setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
+
+        if (reader) {
+            let buffer = '';
+            
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                
+                const chunk = decoder.decode(value, { stream: true });
+                buffer += chunk;
+                
+                const lines = buffer.split('\n');
+                
+                // Keep the last part which might be incomplete
+                buffer = lines.pop() || '';
+                
+                for (const line of lines) {
+                    if (line.trim().startsWith('data: ')) {
+                        const data = line.trim().slice(6);
+                        if (data === '[DONE]') continue;
+                        
+                        try {
+                            const parsed = JSON.parse(data);
+                            if (parsed.error) {
+                                console.error('AI Error:', parsed.error);
+                                setMessages(prev => {
+                                    const updated = [...prev];
+                                    updated[updated.length - 1] = { 
+                                        role: 'assistant', 
+                                        content: `Error: ${parsed.error}` 
+                                    };
+                                    return updated;
+                                });
+                            } else if (parsed.content) {
+                                assistantMessage += parsed.content;
+                                setMessages(prev => {
+                                    const updated = [...prev];
+                                    updated[updated.length - 1] = { role: 'assistant', content: assistantMessage };
+                                    return updated;
+                                });
+                            }
+                        } catch (e) {
+                            console.error('Error parsing chunk', e);
+                        }
+                    }
+                }
+            }
+        }
+    } catch (error) {
+        console.error(error);
+        setMessages(prev => [...prev, { role: 'assistant', content: "Sorry, I encountered an error. Please try again." }]);
+    } finally {
+        setIsTyping(false);
+    }
   };
 
   return (
@@ -72,7 +151,7 @@ export default function AssistantChat() {
                   <h3 className="text-white font-bold text-sm">MedAssist AI</h3>
                   <p className="text-blue-100 text-xs flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    Online
+                    Online &bull; {getDashboardContext().split(' ')[0]}
                   </p>
                 </div>
               </div>
@@ -80,12 +159,14 @@ export default function AssistantChat() {
                 <button 
                   onClick={() => setIsExpanded(!isExpanded)}
                   className="p-1.5 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                  title={isExpanded ? "Minimize" : "Maximize"}
                 >
                   {isExpanded ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
                 </button>
                 <button 
                   onClick={() => setIsOpen(false)}
                   className="p-1.5 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                  title="Close"
                 >
                   <X size={16} />
                 </button>
@@ -106,7 +187,38 @@ export default function AssistantChat() {
                       ? 'bg-blue-600 text-white rounded-br-none' 
                       : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-bl-none border border-slate-100 dark:border-slate-700'
                   }`}>
-                    <p className="text-sm leading-relaxed">{msg.content}</p>
+
+<div className={`text-sm leading-relaxed ${
+  msg.role === 'user' ? 'text-white' : 'text-slate-800 dark:text-slate-200'
+}`}>
+  <ReactMarkdown 
+    remarkPlugins={[remarkGfm]}
+    components={{
+      p: ({node, ...props}) => <p className="mb-2 last:mb-0" {...props} />,
+      ul: ({node, ...props}) => <ul className="list-disc ml-4 mb-2" {...props} />,
+      ol: ({node, ...props}) => <ol className="list-decimal ml-4 mb-2" {...props} />,
+      li: ({node, ...props}) => <li className="mb-0.5" {...props} />,
+      a: ({node, ...props}) => <a className="underline hover:opacity-80 transition-opacity" target="_blank" rel="noopener noreferrer" {...props} />,
+      code: ({node, className, children, ...props}: any) => {
+        const match = /language-(\w+)/.exec(className || '')
+        const isInline = !match && !String(children).includes('\n');
+        return !isInline ? (
+          <div className="bg-slate-950 text-slate-50 rounded-lg p-3 my-2 text-xs overflow-x-auto font-mono">
+            <code className={className} {...props}>
+              {children}
+            </code>
+          </div>
+        ) : (
+          <code className="bg-black/10 dark:bg-white/10 rounded px-1 py-0.5 text-xs font-mono" {...props}>
+            {children}
+          </code>
+        )
+      }
+    }}
+  >
+    {msg.content}
+  </ReactMarkdown>
+</div>
                   </div>
                 </motion.div>
               ))}
@@ -135,13 +247,14 @@ export default function AssistantChat() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                  placeholder="Ask anything..."
+                  placeholder={`Ask regarding ${getDashboardContext().toLowerCase()}...`}
                   className="flex-1 px-4 py-3 pr-12 rounded-xl bg-slate-50 dark:bg-slate-900 border-none focus:ring-2 focus:ring-blue-500 text-sm transition-all"
                 />
                 <Button 
                   onClick={handleSend}
-                  disabled={!input.trim()}
+                  disabled={!input.trim() || isTyping}
                   size="sm"
+                  variant="primary"
                   className="absolute right-1.5 top-1.5 !p-2 rounded-lg aspect-square"
                 >
                   <Send size={16} />
